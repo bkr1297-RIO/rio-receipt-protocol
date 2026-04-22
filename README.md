@@ -100,6 +100,43 @@ If it runs, it can be proven.
 
 ---
 
+## Where the Invariant Is Enforced
+
+The core invariant is enforced at the validation step before execution.
+
+Flow:
+
+```
+intent
+→ approval
+→ validation
+→ execution
+→ receipt
+→ verification
+```
+
+Validation enforces that:
+
+- the execution input exactly matches the approved intent
+- the context and scope are unchanged
+- the action is permitted
+
+If any check fails:
+
+→ execution is blocked
+
+Only after validation passes:
+
+→ execution occurs
+→ a receipt is generated
+→ the outcome can be independently verified
+
+This is where the invariant holds:
+
+**Nothing executes unless it exactly matches what was approved.**
+
+---
+
 ## Repository Structure
 
 ```
