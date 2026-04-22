@@ -1,0 +1,11 @@
+{
+  "action": "send_email",
+  "target": "finance@company.com",
+  "parameters": {
+    "subject": "Q2 Report",
+    "body": "See attached report."
+  },
+  "context": {
+    "channel": "email"
+  }
+}

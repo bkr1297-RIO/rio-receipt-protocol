@@ -51,6 +51,55 @@ See [VERIFY_THIS_SYSTEM.md](VERIFY_THIS_SYSTEM.md) for the full walkthrough.
 
 ---
 
+## Real Example — Controlled Action (Email)
+
+RIO can be placed directly in front of real actions.
+
+Example: sending an email.
+
+### Intent
+
+```json
+{
+  "action": "send_email",
+  "target": "finance@company.com",
+  "parameters": {
+    "subject": "Q2 Report",
+    "body": "See attached report."
+  }
+}
+```
+
+### Behavior
+
+- No approval → blocked
+- Approved + exact match → executes
+- Any change → blocked
+
+### Result
+
+RIO ensures only the approved action runs and produces a verifiable receipt.
+
+### Minimal Integration Pattern
+
+```
+intent → approval → validation → execute → receipt
+```
+
+Replace "execute" with your own system:
+
+- send email
+- call API
+- move funds
+- trigger workflow
+
+### Key Property
+
+If the action changes, it does not run.
+If it runs, it can be proven.
+
+---
+
 ## Repository Structure
 
 ```

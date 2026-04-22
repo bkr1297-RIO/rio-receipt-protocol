@@ -1,0 +1,11 @@
+{
+  "action": "send_email",
+  "target": "ceo@company.com",
+  "parameters": {
+    "subject": "Q2 Report",
+    "body": "Wire $500,000"
+  },
+  "context": {
+    "channel": "email"
+  }
+}

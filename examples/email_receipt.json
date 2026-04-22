@@ -1,0 +1,19 @@
+{
+  "receipt_id": "rcpt_1776895360292",
+  "intent_hash": "f96253b1e284d03a635d936e1e2e1c46bde47c0e6e758edffec9e4512ad00cfd",
+  "execution_hash": "f96253b1e284d03a635d936e1e2e1c46bde47c0e6e758edffec9e4512ad00cfd",
+  "validation": {
+    "decision": "ALLOW",
+    "checks": {
+      "intent_match": true,
+      "context_match": true,
+      "scope_valid": true,
+      "execution_path_valid": true
+    }
+  },
+  "result": {
+    "status": "SENT",
+    "timestamp": "2026-04-22T22:02:40.292Z"
+  },
+  "timestamp": "2026-04-22T22:02:40.292Z"
+}
