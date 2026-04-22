@@ -30,7 +30,19 @@ function sha256(data) {
 }
 
 function canonicalize(obj) {
-  return JSON.stringify(obj, Object.keys(obj).sort());
+  if (obj === null || typeof obj !== 'object') {
+    return JSON.stringify(obj);
+  }
+
+  if (Array.isArray(obj)) {
+    return '[' + obj.map(canonicalize).join(',') + ']';
+  }
+
+  const sortedKeys = Object.keys(obj).sort();
+
+  return '{' + sortedKeys.map(key => {
+    return JSON.stringify(key) + ':' + canonicalize(obj[key]);
+  }).join(',') + '}';
 }
 
 // --- Trust anchor ---

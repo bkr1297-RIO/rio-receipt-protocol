@@ -29,7 +29,19 @@ function sha256(data) {
 }
 
 function canonicalize(obj) {
-  return JSON.stringify(obj, Object.keys(obj).sort());
+  if (obj === null || typeof obj !== 'object') {
+    return JSON.stringify(obj);
+  }
+
+  if (Array.isArray(obj)) {
+    return '[' + obj.map(canonicalize).join(',') + ']';
+  }
+
+  const sortedKeys = Object.keys(obj).sort();
+
+  return '{' + sortedKeys.map(key => {
+    return JSON.stringify(key) + ':' + canonicalize(obj[key]);
+  }).join(',') + '}';
 }
 
 function sign(payload, privKey) {
@@ -354,14 +366,51 @@ console.log("RESULT:", r5.overall);
 if (r5.overall !== "FAIL" || r5.nonce_unique !== false) allPass = false;
 console.log("");
 
+// --- TEST 6: NESTED FIELD TAMPER (Phase 3 — canonicalization coverage) ---
+
+console.log("=== TEST 6: NESTED FIELD TAMPER (parameters.body changed) ===");
+
+const nestedNonce = crypto.randomUUID();
+const nestedApproval = {
+  approval_id: crypto.randomUUID(),
+  intent_hash: sha256(canonicalize(validIntent)),
+  authorizer: "human:brian",
+  nonce: nestedNonce,
+  scope: "send_email",
+};
+
+const nestedReceipt = buildReceipt(validIntent, validIntent, nestedApproval, trustedPrivateKey, trustedPubKeyHex, null);
+
+// Tamper with a NESTED field (parameters.body) — must invalidate hash + signature
+const nestedTampered = JSON.parse(JSON.stringify(nestedReceipt));
+// Recompute execution_hash with different parameters to simulate what the old bug allowed
+const tamperedExecution = {
+  action: "send_email",
+  target: "user@example.com",
+  parameters: { subject: "Hello", body: "HIJACKED MESSAGE" },
+};
+nestedTampered.execution_hash = sha256(canonicalize(tamperedExecution));
+
+console.log("Original execution_hash:", nestedReceipt.execution_hash);
+console.log("Tampered execution_hash:", nestedTampered.execution_hash);
+console.log("Hashes differ:", nestedReceipt.execution_hash !== nestedTampered.execution_hash);
+
+const r6 = verify(nestedTampered);
+console.log("receipt_hash_valid:", r6.receipt_hash_valid);
+console.log("signature_valid:", r6.signature_valid);
+console.log("RESULT:", r6.overall);
+if (r6.overall !== "FAIL" || r6.receipt_hash_valid !== false) allPass = false;
+console.log("");
+
 // --- SUMMARY ---
 
 console.log("=== SUMMARY ===");
-console.log("Test 1 (Valid):   ", validReceipt.decision === "ALLOW" && r1.overall === "PASS" ? "PASS" : "FAIL");
-console.log("Test 2 (Drift):   ", driftReceipt.decision === "BLOCK" ? "BLOCKED" : "FAIL");
-console.log("Test 3 (Tamper):  ", r3.overall === "FAIL" ? "DETECTED" : "FAIL");
-console.log("Test 4 (Forged):  ", r4.overall === "FAIL" && !r4.key_trusted ? "REJECTED" : "FAIL");
-console.log("Test 5 (Replay):  ", r5.overall === "FAIL" && !r5.nonce_unique ? "BLOCKED" : "FAIL");
+console.log("Test 1 (Valid):        ", validReceipt.decision === "ALLOW" && r1.overall === "PASS" ? "PASS" : "FAIL");
+console.log("Test 2 (Drift):        ", driftReceipt.decision === "BLOCK" ? "BLOCKED" : "FAIL");
+console.log("Test 3 (Tamper):       ", r3.overall === "FAIL" ? "DETECTED" : "FAIL");
+console.log("Test 4 (Forged):       ", r4.overall === "FAIL" && !r4.key_trusted ? "REJECTED" : "FAIL");
+console.log("Test 5 (Replay):       ", r5.overall === "FAIL" && !r5.nonce_unique ? "BLOCKED" : "FAIL");
+console.log("Test 6 (Nested tamper):", r6.overall === "FAIL" && !r6.receipt_hash_valid ? "DETECTED" : "FAIL");
 console.log("");
 console.log("ALL TESTS:", allPass ? "PASS" : "FAIL");
 
