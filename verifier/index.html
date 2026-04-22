@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RIO Receipt Verifier</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: monospace; background: #0a0a0a; color: #e0e0e0; padding: 2rem; max-width: 800px; margin: 0 auto; }
+    h1 { color: #fff; margin-bottom: 0.5rem; }
+    p.sub { color: #888; margin-bottom: 2rem; }
+    textarea { width: 100%; height: 300px; background: #111; color: #0f0; border: 1px solid #333; padding: 1rem; font-family: monospace; font-size: 0.85rem; resize: vertical; }
+    button { margin-top: 1rem; padding: 0.75rem 2rem; background: #222; color: #fff; border: 1px solid #555; cursor: pointer; font-family: monospace; font-size: 1rem; }
+    button:hover { background: #333; }
+    #results { margin-top: 2rem; padding: 1rem; background: #111; border: 1px solid #333; display: none; }
+    .pass { color: #0f0; }
+    .fail { color: #f00; }
+    .check { margin: 0.25rem 0; }
+  </style>
+</head>
+<body>
+  <h1>RIO Receipt Verifier</h1>
+  <p class="sub">Paste a receipt JSON below and verify its integrity.</p>
+  <textarea id="receiptInput" placeholder="Paste receipt JSON here..."></textarea>
+  <button onclick="runVerify()">Verify Receipt</button>
+  <div id="results"></div>
+  <script src="verify.js"></script>
+</body>
+</html>

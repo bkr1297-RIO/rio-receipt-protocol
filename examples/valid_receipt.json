@@ -1,0 +1,30 @@
+{
+  "receipt_id": "8f5723b2-481d-4c80-962d-0d04721cb28d",
+  "timestamp": "2026-04-22T19:57:05.063Z",
+  "intent_hash": "3d96410ecf7dcf0dde855f9c9f437eeb84088d6faf7cec9777e7a0af3907befe",
+  "execution_hash": "3d96410ecf7dcf0dde855f9c9f437eeb84088d6faf7cec9777e7a0af3907befe",
+  "validation": {
+    "decision": "ALLOW",
+    "checks": {
+      "intent_match": true,
+      "context_match": true,
+      "scope_valid": true,
+      "execution_path_valid": true
+    },
+    "policy_version": "1.0.0"
+  },
+  "decision": "ALLOW",
+  "approval": {
+    "approval_id": "fddaf3e2-6ecf-414e-85ea-67e8f1cb38cd",
+    "intent_hash": "3d96410ecf7dcf0dde855f9c9f437eeb84088d6faf7cec9777e7a0af3907befe",
+    "authorizer": "human:brian",
+    "nonce": "c5a14f3f-a3b2-4e63-a67c-6ba8d2cfb5a6"
+  },
+  "chain_reference": {
+    "previous_receipt_hash": null
+  },
+  "receipt_hash": "ec3dc0aaf3938f06c50306da0987ac049312d508c539af3aeb6c56328d144230",
+  "signature": "fef6e1631033df2f6384e600192c2861b0c927ef5fdf29baf5b3631c9692646c6b5ecf95a23e982f12768e83b81e5adeff9f235ed58a2e824888fa83cdc5360e",
+  "signature_algorithm": "Ed25519",
+  "public_key": "302a300506032b6570032100c6ac928a3e22097316f7fd249ef67b592fe871501eaa9c4950e759a8359ec7bd"
+}
