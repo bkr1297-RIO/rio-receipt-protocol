@@ -1,53 +1,47 @@
-# RIO Receipt Protocol
 
-A minimal, complete, verifiable system that proves:
+# RIO — Receipt Protocol for Verifiable AI Actions
 
-- No action executes unless it exactly matches what was approved
-- Invalid or altered actions are blocked
-- All outcomes produce verifiable, tamper-evident receipts
+A minimal system that ensures AI actions execute exactly as approved—and proves it.
 
 ---
 
-## What This Is
+## Run it in 30 seconds
 
-This repository contains:
+node demo.js
 
-- a protocol specification
-- a reference implementation
-- a verification system
+You will see:
 
-It is a standard, a proof system, and a reference implementation.
+- valid action → ALLOW
+- modified action → BLOCK
+- tampered receipt → FAIL
 
 ---
 
 ## Core Invariant
 
-Nothing executes unless it exactly matches what was approved at the moment of execution — and that fact is provable.
+Nothing executes unless it exactly matches what was approved at the moment of execution—and that fact is provable.
+
+---
+
+## What This Is
+
+This repository provides:
+
+- a minimal reference implementation
+- a deterministic validation layer
+- a cryptographic receipt + verification system
+
+It demonstrates how to:
+
+- enforce exact-match execution
+- prevent silent or altered actions
+- produce independently verifiable proof
 
 ---
 
 ## System Model
 
-```
 Language → Intent → Approval → Validation → Execution → Receipt → Verification
-```
-
----
-
-## Quick Start
-
-```bash
-# Generate receipts (valid + denied)
-node generate_receipt.js
-
-# Verify a receipt
-node verify_receipt.js examples/valid_receipt.json
-
-# Test tamper detection
-node test_tamper.js
-```
-
-See [VERIFY_THIS_SYSTEM.md](VERIFY_THIS_SYSTEM.md) for the full walkthrough.
 
 ---
 
@@ -55,11 +49,8 @@ See [VERIFY_THIS_SYSTEM.md](VERIFY_THIS_SYSTEM.md) for the full walkthrough.
 
 RIO can be placed directly in front of real actions.
 
-Example: sending an email.
+Intent:
 
-### Intent
-
-```json
 {
   "action": "send_email",
   "target": "finance@company.com",
@@ -68,119 +59,121 @@ Example: sending an email.
     "body": "See attached report."
   }
 }
-```
 
-### Behavior
+Behavior:
 
 - No approval → blocked
 - Approved + exact match → executes
 - Any change → blocked
 
-### Result
+Result:
 
-RIO ensures only the approved action runs and produces a verifiable receipt.
+Only the approved action runs, and the outcome is verifiable.
 
-### Minimal Integration Pattern
+---
 
-```
-intent → approval → validation → execute → receipt
-```
+## How to Use This in Your System
 
-Replace "execute" with your own system:
+To apply this pattern:
 
-- send email
-- call API
-- move funds
-- trigger workflow
+1. Structure intent into explicit, machine-readable form
+2. Require explicit approval before execution
+3. Validate execution against the approved intent
+4. Execute only if validation passes
+5. Generate a receipt after execution
+6. Verify receipts independently
 
-### Key Property
+The pattern:
 
-If the action changes, it does not run.
-If it runs, it can be proven.
+intent → approval → validation → execution → receipt → verification
+
+See a simple example:
+
+/examples/integration/
+
+---
+
+## Next Step — Beyond This Repo
+
+This repository demonstrates execution and proof.
+
+To build a complete system, you will need:
+
+- an approval layer (human-in-the-loop)
+- a gateway to enforce execution boundaries
+- a policy layer for constraints and risk
+
+This repository intentionally stops at execution and verification.
 
 ---
 
 ## Where the Invariant Is Enforced
 
-The core invariant is enforced at the validation step before execution.
+The invariant is enforced at validation before execution.
 
-Flow:
-
-```
 intent
 → approval
 → validation
 → execution
 → receipt
 → verification
-```
 
-Validation enforces that:
+Validation ensures:
 
-- the execution input exactly matches the approved intent
-- the context and scope are unchanged
-- the action is permitted
+- execution input matches approved intent
+- context and scope are unchanged
+- action is permitted
 
 If any check fails:
 
 → execution is blocked
 
-Only after validation passes:
-
-→ execution occurs
-→ a receipt is generated
-→ the outcome can be independently verified
-
-This is where the invariant holds:
-
-**Nothing executes unless it exactly matches what was approved.**
-
 ---
 
 ## Repository Structure
 
-```
-generate_receipt.js          ← generates valid + denied receipts
-verify_receipt.js            ← verifies receipt integrity
-test_tamper.js               ← demonstrates tamper detection
+demo.js                     ← one-command demo
+
+generate_receipt.js         ← receipt generation
+verify_receipt.js           ← verification
+test_tamper.js              ← tamper detection
 
 examples/
-  valid_receipt.json         ← ALLOW case
-  denied_receipt.json        ← BLOCK case (drift)
+  valid_receipt.json
+  denied_receipt.json
+
+examples/integration/
+  send_email_example.md
 
 verifier/
-  index.html                 ← browser-based verifier
-  verify.js                  ← browser verification logic
+  index.html
+  verify.js
 
 spec/
   rio-overview.md
   execution-validation-layer.md
   rasmussen-construction.md
   delegated-representation-layer-v1.md
-  BONDI_ROUTING_ENGINE_v1.0.md
-  BONDI_AUTHORITY_BOUNDARY_v1.0.md
-  BONDI_RUNTIME_SPINE_v1.0.md
-  BONDI_PACKET_SCHEMAS_v1.0.md
+  BONDI_*.md
 
 docs/
   SECURITY_SUMMARY.md
-```
-
----
-
-## Naming
-
-- **Execution Validation Layer** — ensures execution matches approved intent
-- **Rasmussen Receipt Construction** — canonical method for building receipts
 
 ---
 
 ## Dependencies
 
-None. Uses only Node.js built-in `crypto` module.
+None. Uses only Node.js built-in crypto module.
 
 ---
 
 ## License
 
 MIT
+
+---
+
+## One Line
+
+If it changes, it doesn’t run.
+If it runs, you can prove it.
