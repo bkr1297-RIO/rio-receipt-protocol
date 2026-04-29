@@ -21,9 +21,20 @@ const path = require("path");
 
 // --- Paths ---
 
+const CONFIG_PATH = path.join(__dirname, "config", "mus-unit.json");
 const SIGNING_KEY_PATH = path.join(__dirname, "trust", "signing_key.json");
 const TRUSTED_KEYS_PATH = path.join(__dirname, "trust", "trusted_keys.json");
 const NONCE_STORE_PATH = path.join(__dirname, "runtime", "nonce_store.json");
+
+// --- Load local unit config (if initialized) ---
+
+let musUnitId = null;
+let localOwner = "human:brian"; // legacy default for backward compatibility
+if (fs.existsSync(CONFIG_PATH)) {
+  const config = JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8"));
+  musUnitId = config.mus_unit_id || null;
+  localOwner = config.owner || "human:local";
+}
 
 // --- Persistent signing key (1A) ---
 
@@ -181,6 +192,7 @@ function constructReceipt(intent, executionInput, approval, validation, previous
     timestamp: now(),
     intent_hash: intentHash,
     execution_hash: executionHash,
+    ...(musUnitId ? { mus_unit_id: musUnitId } : {}),
     validation: {
       decision: validation.decision,
       checks: validation.checks,
@@ -229,7 +241,7 @@ const validNonce = crypto.randomUUID();
 const validApproval = {
   approval_id: makeId(),
   intent_hash: sha256(canonicalize(validIntent)),
-  authorizer: "human:brian",
+  authorizer: localOwner,
   nonce: validNonce,
   ttl: 300,
   scope: "send_email",
@@ -257,7 +269,7 @@ const deniedNonce = crypto.randomUUID();
 const deniedApproval = {
   approval_id: makeId(),
   intent_hash: sha256(canonicalize(deniedIntent)),
-  authorizer: "human:brian",
+  authorizer: localOwner,
   nonce: deniedNonce,
   ttl: 300,
   scope: "send_email",

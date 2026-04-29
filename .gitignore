@@ -1,0 +1,14 @@
+# Generated state (user-specific, created by init/demo)
+config/
+trust/signing_key.json
+runtime/nonce_store.json
+runtime/verified_nonces.json
+ledger/ledger.jsonl
+
+# Keep directory structure
+!config/.gitkeep
+!ledger/.gitkeep
+!runtime/.gitkeep
+
+# Node
+node_modules/

@@ -1,0 +1,28 @@
+{
+  "name": "rio-receipt-protocol",
+  "version": "0.3.0",
+  "description": "Real Receipt Protocol — Local Receipt Engine for creating, signing, and verifying tamper-evident receipts with a hash-chained ledger.",
+  "main": "generate_receipt.js",
+  "scripts": {
+    "init": "node mus-init.js",
+    "demo": "node demo.js",
+    "verify": "node verify_receipt.js",
+    "verify-chain": "node verify-chain.js",
+    "test": "node test_tamper.js && node test_chain.js"
+  },
+  "keywords": [
+    "receipt",
+    "protocol",
+    "verification",
+    "ledger",
+    "hash-chain",
+    "ed25519",
+    "tamper-evident",
+    "sovereignty"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {}
+}

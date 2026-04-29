@@ -1,6 +1,6 @@
 {
-  "receipt_id": "8b423b2a-6cf7-4c1a-a98a-a1cb5bd773cb",
-  "timestamp": "2026-04-22T21:46:06.091Z",
+  "receipt_id": "4ab8d7bc-6fb1-4732-9f1a-f968a7dce517",
+  "timestamp": "2026-04-28T05:47:56.495Z",
   "intent_hash": "2c80aa620447268c89613900a99dc0f90fa58da1fda1f648e7c659830f9f3fa0",
   "execution_hash": "2c80aa620447268c89613900a99dc0f90fa58da1fda1f648e7c659830f9f3fa0",
   "validation": {
@@ -15,16 +15,16 @@
   },
   "decision": "ALLOW",
   "approval": {
-    "approval_id": "6ea86c15-47ab-4f4f-9151-1b9cec43eee9",
+    "approval_id": "5af9059a-61aa-4441-b2c9-fdc04ea75646",
     "intent_hash": "2c80aa620447268c89613900a99dc0f90fa58da1fda1f648e7c659830f9f3fa0",
     "authorizer": "human:brian",
-    "nonce": "9f1265d3-b4c6-4666-a707-6ad769bd9fce"
+    "nonce": "19c4a4ae-1a00-413b-b17c-71952d02a7e3"
   },
   "chain_reference": {
     "previous_receipt_hash": null
   },
-  "receipt_hash": "f2cea2f2532c5689283117af84395b07ffd8abbd5cb8f3b154c9de9635f80e78",
-  "signature": "ff30c5be170471e7ace52490002b1b39547c5c8e413eab7d6f24b172874d12656583aa313c57adc9ff9ee2dcb52df9b288cd674ce49f6f322655f5de9732a80d",
+  "receipt_hash": "aa844473a9271f1952431a238de1af058658fbe8a1807bea2802188bb47d010e",
+  "signature": "abc80c331d81c4f7e09140ceee2f0b76b1e8afe65367047aa51fe34586b64e627e374c11fd750ab4a4f17e0284503a22ec023b1a67527778f9ef4174a39bb401",
   "signature_algorithm": "Ed25519",
   "public_key": "302a300506032b65700321008d3add61669629ffd484835fd6a0503d44174e160b91df27c67dc4e6ad10b150"
 }
