@@ -1,24 +1,53 @@
 # RIO — Receipt Protocol for Verifiable AI Actions
 
-A minimal system that ensures AI actions execute exactly as approved — and proves it.
+> **Classification C — Local Receipt Engine Prototype**
+>
+> A local, zero-dependency receipt engine for creating, signing, appending, and verifying receipts for governed AI/software actions.
 
 No account required. No cloud dependency. No hidden agent action. Runs locally on your machine.
 
 ---
 
-## Run it in 30 seconds
+## 60-Second Quickstart
+
+> **Important:** You must run `npm run init` first. The repo ships without generated local state — no keypair, no ledger, no unit config. Init creates everything you need.
 
 ```bash
+git clone https://github.com/bkr1297-RIO/rio-receipt-protocol.git
+cd rio-receipt-protocol
 npm run init -- --owner "human:your-name"
+npm test
 npm run demo
+npm run verify-chain
 ```
 
-You will see:
+**What you will see:**
 
-- valid action → ALLOW
-- modified action → BLOCK
-- tampered receipt → FAIL
-- ledger chain → VALID
+| Command | Result |
+|---------|--------|
+| `npm run init` | Creates your local identity, keypair, and empty ledger |
+| `npm test` | 21/21 tests pass (6 tamper + 15 chain) |
+| `npm run demo` | 2 receipts created (1 ALLOW + 1 BLOCK), ledger VALID |
+| `npm run verify-chain` | Full ledger chain verification → CHAIN VALID |
+
+That's it. No install beyond Node.js 18+. No npm dependencies. No network calls.
+
+---
+
+## How It Works
+
+```
+init local unit
+  → generate keypair
+    → create signed receipt
+      → append to ledger
+        → verify chain
+```
+
+1. **Init** — `mus-init.js` creates a local MUS Unit: unit ID, Ed25519 keypair, trusted keys, empty ledger, nonce store.
+2. **Receipt** — `generate_receipt.js` validates intent vs. execution, creates a signed receipt with hash, signature, and chain link.
+3. **Ledger** — `ledger.js` appends the receipt to a local JSONL file with `receipt_hash` and `previous_receipt_hash`.
+4. **Verify** — `verify-chain.js` walks the full chain, checking every hash, signature, chain link, and trust anchor.
 
 ---
 
@@ -28,49 +57,53 @@ Nothing executes unless it exactly matches what was approved at the moment of ex
 
 ---
 
-## What This Is
+## What This Proves
 
-This repository provides:
+This repo currently demonstrates and verifies:
 
-- a minimal reference implementation
-- a deterministic validation layer
-- a cryptographic receipt + verification system
-- a persistent hash-chain ledger
-- a local identity and keypair system
-
-It demonstrates how to:
-
-- enforce exact-match execution
-- prevent silent or altered actions
-- produce independently verifiable proof
-- chain receipts into a tamper-evident ledger
-- initialize a portable local receipt engine
-
----
-
-## System Model
-
-Language → Intent → Approval → Validation → Execution → Receipt → Ledger → Verification
+| Capability | How |
+|------------|-----|
+| Local identity/keypair initialization | `mus-init.js` creates Ed25519 keypair per user |
+| Ed25519 signed receipts | Every receipt carries a signature and public key |
+| Local hash-chain ledger | Append-only JSONL with `receipt_hash` → `previous_receipt_hash` linkage |
+| Ledger chain verification | `verify-chain.js` validates every link |
+| Tamper detection | Modified receipt body → hash mismatch → FAIL |
+| Deletion detection | Missing chain entry → broken link → FAIL |
+| Reorder detection | Wrong `previous_receipt_hash` → FAIL |
+| Untrusted-key detection | Receipt signed by unknown key → REJECTED |
+| Replay prevention | Reused nonce → BLOCKED |
+| Zero external services required | No dependencies, no network calls, no accounts |
 
 ---
 
-## Quick Start
+## What This Does Not Do Yet
 
-```bash
-# 1. Initialize your local MUS Unit
-npm run init -- --owner "human:your-name"
+This repo is the **proof layer only**. It does not include:
 
-# 2. Run the demo (creates receipts, appends to ledger, verifies chain)
-npm run demo
+- the full ONE product (human-facing governed operating environment)
+- production enforcement or runtime governance
+- policy evaluation or risk assessment
+- Brian Shield (content governance evaluator)
+- email/scanner integration
+- a complete Portable MUS Unit
+- legal or compliance certification
 
-# 3. Verify the ledger hash chain
-npm run verify-chain
+These belong to the broader RIO/ONE/MUSS system, which is separate from this repository.
 
-# 4. Run all tests
-npm test
-```
+---
 
-That's it. No install beyond Node.js 18+. No npm dependencies. No network calls.
+## Current Verified Status
+
+| Field | Value |
+|-------|-------|
+| Classification | **C — Local Receipt Engine Prototype** |
+| Status | `verified_on_main` |
+| PR | #2 merged |
+| Tests | 21/21 passing |
+| Demo | 2 receipts — 1 ALLOW + 1 BLOCK |
+| Ledger | Verifies VALID |
+| Dependencies | Zero |
+| Network calls | Zero |
 
 ---
 
@@ -79,6 +112,7 @@ That's it. No install beyond Node.js 18+. No npm dependencies. No network calls.
 ### `npm run init`
 
 Creates your local identity and storage:
+
 - Generates an Ed25519 keypair (your signing identity)
 - Creates a unit ID (your local MUS Unit identifier)
 - Initializes an empty hash-chain ledger
@@ -87,6 +121,7 @@ Creates your local identity and storage:
 ### `npm run demo`
 
 Demonstrates the full receipt loop:
+
 1. Creates a valid intent (send_email to colleague)
 2. Validates execution matches intent → ALLOW
 3. Creates a drifted execution (target changed) → BLOCK
@@ -98,6 +133,7 @@ Demonstrates the full receipt loop:
 ### `npm run verify-chain`
 
 Reads the ledger and checks:
+
 - Every receipt hash is correct (no tampering)
 - Every signature is valid (signed by trusted key)
 - Every chain link is intact (no deletions or reordering)
@@ -187,6 +223,7 @@ If ANY check fails → BLOCK. Fail-closed by design.
 ### Hash Chain
 
 Each receipt links to the previous via `previous_receipt_hash`. This creates an append-only chain where:
+
 - Deletion is detectable (chain link breaks)
 - Modification is detectable (hash mismatch)
 - Reordering is detectable (previous_hash mismatch)
@@ -271,6 +308,16 @@ scripts/                    ← Demo scripts
 
 ---
 
+## RIO Portable Kit Context
+
+This repo is the **Proof layer** of the broader RIO Portable Kit. The Source Pack carries context; this repo carries proof.
+
+> **The protocol proves the grammar. The Local Receipt Engine makes the grammar portable.**
+
+For the full kit (Purpose + Meaning + Proof), see the RIO Portable Kit.
+
+---
+
 ## Extension Points
 
 This engine is designed to be extended. The following are documented but not yet implemented:
@@ -296,24 +343,10 @@ This repository intentionally stops at execution, verification, and local ledger
 
 ---
 
-## Classification
-
-This repo is classified as **C — Local Receipt Engine Prototype**:
-- Can initialize a local MUS Unit ✓
-- Can generate a local keypair ✓
-- Can create signed receipts ✓
-- Can append to a hash-chain ledger ✓
-- Can verify individual receipts ✓
-- Can verify the full chain ✓
-- Runs fully locally with no network calls ✓
-- Is user-agnostic (any owner handle works) ✓
-
----
-
 ## Tests
 
 ```bash
-# Run all tests
+# Run all tests (requires init first)
 npm test
 
 # Run only tamper detection tests (6 cases)
