@@ -343,6 +343,12 @@ This repository intentionally stops at execution, verification, and local ledger
 
 ---
 
+## Why Receipts Matter Across AI
+
+For a deeper exploration of why receipts are the test harness for AI action — across agentic, personal, fiduciary, enterprise, and robotic AI — see [docs/receipts-as-ai-action-test-harness.md](docs/receipts-as-ai-action-test-harness.md).
+
+---
+
 ## Tests
 
 ```bash
