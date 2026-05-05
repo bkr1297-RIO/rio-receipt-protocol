@@ -8,6 +8,19 @@ No account required. No cloud dependency. No hidden agent action. Runs locally o
 
 ---
 
+## Canonical Source of Truth
+
+| Repository | Role |
+|------------|------|
+| [bkr1297-RIO/rio-protocol](https://github.com/bkr1297-RIO/rio-protocol) | Canonical protocol source of truth |
+| [bkr1297-RIO/rio-system](https://github.com/bkr1297-RIO/rio-system) | Observation / MANTIS / pattern-awareness runtime |
+| **bkr1297-RIO/rio-receipt-protocol** (this repo) | Local receipt/proof engine |
+| bkr1297-RIO/rio-proxy | Governed execution runtime implementation |
+
+This repository implements the **proof layer** of the RIO protocol. It is a self-contained, zero-dependency receipt engine. The canonical protocol specification (operating spec, state machine, syscalls, verification stack) lives in [rio-protocol](https://github.com/bkr1297-RIO/rio-protocol).
+
+---
+
 ## 60-Second Quickstart
 
 > **Important:** You must run `npm run init` first. The repo ships without generated local state — no keypair, no ledger, no unit config. Init creates everything you need.
