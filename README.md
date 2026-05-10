@@ -1,23 +1,51 @@
-# RIO — Receipt Protocol for Verifiable AI Actions
+# RIO Receipt Protocol
 
-> **Classification C — Local Receipt Engine Prototype**
->
-> A local, zero-dependency receipt engine for creating, signing, appending, and verifying receipts for governed AI/software actions.
+**The proof layer for governed AI actions.**
 
-No account required. No cloud dependency. No hidden agent action. Runs locally on your machine.
+This repository is the local receipt engine — it creates, signs, and verifies cryptographic proof that an action was authorized, executed as approved, and recorded in a tamper-evident ledger.
+
+> This is **part of the RIO system**, not the entire system. It handles proof. Other repositories handle governance, observation, and interface.
 
 ---
 
-## Canonical Source of Truth
+## What RIO Is
+
+RIO is a governed execution layer for AI systems. It sits between intelligent systems and real-world actions, ensuring that important actions cannot execute without authorization, policy checks, verification, and proof. Different repositories implement different parts of the system, including governance, receipts, observation, and interface layers.
+
+**The short version:**
+
+- AI proposes.
+- Humans approve when required.
+- RIO governs execution.
+- Receipts prove what happened.
+
+---
+
+## What This Repository Contains
+
+A self-contained, zero-dependency receipt engine that demonstrates:
+
+- Creating cryptographically signed receipts for every governed action
+- Appending receipts to a hash-chained ledger (tamper-evident)
+- Verifying the full chain independently (no network, no accounts, no trust required)
+- Detecting tampering, deletion, reordering, and replay attacks
+
+**Classification:** C — Local Receipt Engine Prototype
+**Dependencies:** Zero (Node.js 18+ built-in crypto only)
+**Network calls:** Zero
+
+---
+
+## How This Repo Fits Into the Larger System
 
 | Repository | Role |
 |------------|------|
-| [bkr1297-RIO/rio-protocol](https://github.com/bkr1297-RIO/rio-protocol) | Canonical protocol source of truth |
-| [bkr1297-RIO/rio-system](https://github.com/bkr1297-RIO/rio-system) | Observation / MANTIS / pattern-awareness runtime |
-| **bkr1297-RIO/rio-receipt-protocol** (this repo) | Local receipt/proof engine |
-| bkr1297-RIO/rio-proxy | Governed execution runtime implementation |
+| [rio-protocol](https://github.com/bkr1297-RIO/rio-protocol) | Canonical protocol specification |
+| **[rio-receipt-protocol](https://github.com/bkr1297-RIO/rio-receipt-protocol)** (this repo) | Proof layer — local receipt engine |
+| [rio-system](https://github.com/bkr1297-RIO/rio-system) | Observation and monitoring layer |
+| [language-intake-mvp](https://github.com/bkr1297-RIO/language-intake-mvp) | Language governance — crossing detection |
 
-This repository implements the **proof layer** of the RIO protocol. It is a self-contained, zero-dependency receipt engine. The canonical protocol specification (operating spec, state machine, syscalls, verification stack) lives in [rio-protocol](https://github.com/bkr1297-RIO/rio-protocol).
+The canonical protocol specification lives in [rio-protocol](https://github.com/bkr1297-RIO/rio-protocol). This repo implements the proof mechanism defined there.
 
 ---
 
@@ -72,8 +100,6 @@ Nothing executes unless it exactly matches what was approved at the moment of ex
 
 ## What This Proves
 
-This repo currently demonstrates and verifies:
-
 | Capability | How |
 |------------|-----|
 | Local identity/keypair initialization | `mus-init.js` creates Ed25519 keypair per user |
@@ -89,68 +115,18 @@ This repo currently demonstrates and verifies:
 
 ---
 
-## What This Does Not Do Yet
+## What This Does Not Do
 
 This repo is the **proof layer only**. It does not include:
 
-- the full ONE product (human-facing governed operating environment)
-- production enforcement or runtime governance
-- policy evaluation or risk assessment
-- Brian Shield (content governance evaluator)
-- email/scanner integration
-- a complete Portable MUS Unit
-- legal or compliance certification
+- the full governance runtime (that's [rio-protocol](https://github.com/bkr1297-RIO/rio-protocol))
+- production enforcement or policy evaluation
+- risk assessment or approval workflows
+- language governance (that's [language-intake-mvp](https://github.com/bkr1297-RIO/language-intake-mvp))
+- observation or pattern monitoring (that's [rio-system](https://github.com/bkr1297-RIO/rio-system))
+- a user interface or accounts
 
-These belong to the broader RIO/ONE/MUSS system, which is separate from this repository.
-
----
-
-## Current Verified Status
-
-| Field | Value |
-|-------|-------|
-| Classification | **C — Local Receipt Engine Prototype** |
-| Status | `verified_on_main` |
-| PR | #2 merged |
-| Tests | 21/21 passing |
-| Demo | 2 receipts — 1 ALLOW + 1 BLOCK |
-| Ledger | Verifies VALID |
-| Dependencies | Zero |
-| Network calls | Zero |
-
----
-
-## What Happens When You Run It
-
-### `npm run init`
-
-Creates your local identity and storage:
-
-- Generates an Ed25519 keypair (your signing identity)
-- Creates a unit ID (your local MUS Unit identifier)
-- Initializes an empty hash-chain ledger
-- Sets up nonce tracking (prevents replay attacks)
-
-### `npm run demo`
-
-Demonstrates the full receipt loop:
-
-1. Creates a valid intent (send_email to colleague)
-2. Validates execution matches intent → ALLOW
-3. Creates a drifted execution (target changed) → BLOCK
-4. Signs both receipts with your local key
-5. Appends both to the hash-chain ledger
-6. Verifies each receipt individually
-7. Verifies the full ledger chain
-
-### `npm run verify-chain`
-
-Reads the ledger and checks:
-
-- Every receipt hash is correct (no tampering)
-- Every signature is valid (signed by trusted key)
-- Every chain link is intact (no deletions or reordering)
-- Every public key is in the trusted set
+These belong to other parts of the RIO system.
 
 ---
 
@@ -180,23 +156,6 @@ Behavior:
 Result:
 
 Only the approved action runs, and the outcome is verifiable.
-
----
-
-## How to Use This in Your System
-
-To apply this pattern:
-
-1. Structure intent into explicit, machine-readable form
-2. Require explicit approval before execution
-3. Validate execution against the approved intent
-4. Execute only if validation passes
-5. Generate a receipt after execution
-6. Verify receipts independently
-
-The pattern:
-
-intent → approval → validation → execution → receipt → ledger → verification
 
 ---
 
@@ -258,23 +217,20 @@ Each receipt links to the previous via `previous_receipt_hash`. This creates an 
 
 ---
 
-## Where the Invariant Is Enforced
+## How to Use This in Your System
 
-The invariant is enforced at validation before execution.
+To apply this pattern:
 
-```
-intent → approval → validation → execution → receipt → verification
-```
+1. Structure intent into explicit, machine-readable form
+2. Require explicit approval before execution
+3. Validate execution against the approved intent
+4. Execute only if validation passes
+5. Generate a receipt after execution
+6. Verify receipts independently
 
-Validation ensures:
+The pattern:
 
-- execution input matches approved intent
-- context and scope are unchanged
-- action is permitted
-
-If any check fails:
-
-→ execution is blocked
+intent → approval → validation → execution → receipt → ledger → verification
 
 ---
 
@@ -321,47 +277,6 @@ scripts/                    ← Demo scripts
 
 ---
 
-## RIO Portable Kit Context
-
-This repo is the **Proof layer** of the broader RIO Portable Kit. The Source Pack carries context; this repo carries proof.
-
-> **The protocol proves the grammar. The Local Receipt Engine makes the grammar portable.**
-
-For the full kit (Purpose + Meaning + Proof), see the RIO Portable Kit.
-
----
-
-## Extension Points
-
-This engine is designed to be extended. The following are documented but not yet implemented:
-
-- **v0.2 policy rules** — Additional governance rules can be loaded from policy JSON files
-- **Network sync** — Ledger entries can be replicated to a remote store
-- **Multi-unit federation** — Multiple MUS Units can cross-verify each other's chains
-- **Policy engine integration** — Connect to the Brian Shield evaluator for content-aware governance
-
----
-
-## Next Step — Beyond This Repo
-
-This repository demonstrates execution, proof, and local persistence.
-
-To build a complete system, you will need:
-
-- an approval layer (human-in-the-loop)
-- a gateway to enforce execution boundaries
-- a policy layer for constraints and risk
-
-This repository intentionally stops at execution, verification, and local ledger.
-
----
-
-## Why Receipts Matter Across AI
-
-For a deeper exploration of why receipts are the test harness for AI action — across agentic, personal, fiduciary, enterprise, and robotic AI — see [docs/receipts-as-ai-action-test-harness.md](docs/receipts-as-ai-action-test-harness.md).
-
----
-
 ## Tests
 
 ```bash
@@ -387,13 +302,12 @@ All tests use isolated temporary data and do not modify the real ledger.
 
 ---
 
-## License
+## One-Line Summary
 
-MIT
+If it changes, it doesn't run. If it runs, you can prove it.
 
 ---
 
-## One Line
+## License
 
-If it changes, it doesn't run.
-If it runs, you can prove it.
+MIT
