@@ -83,6 +83,8 @@ A conforming receipt MUST contain the following fields:
 
 Implementations MAY include additional fields (e.g., `signature_algorithm`, `decision` at top level) but MUST NOT omit required fields.
 
+> **Compatibility note:** The current implementation emits a top-level `decision` field that duplicates `validation.decision`. Both are retained in v0.1 for backward compatibility. v0.2 should evaluate deprecating the top-level `decision` field in favor of `validation.decision` as the single canonical location.
+
 ---
 
 ## 6. Canonicalization
@@ -98,6 +100,8 @@ The current implementation defines canonicalization as follows:
 Implementations MUST use deterministic field ordering as defined above.
 
 Non-deterministic serialization (e.g., language-default `JSON.stringify` without key sorting) MUST NOT be used for receipt hash generation.
+
+> **v0.2 consideration:** Future versions should evaluate alignment with RFC 8785 (JSON Canonicalization Scheme) to improve cross-language interoperability. The current recursive sorted-key method is functionally equivalent for the subset of JSON used in receipts but has not been formally verified against JCS edge cases (e.g., Unicode normalization, number formatting).
 
 The following fields are excluded from the signed body (they are appended after signing):
 - `receipt_hash`
@@ -375,7 +379,7 @@ The following is a synthetic example receipt using fake data. It does not contai
 - Local initialization (`mus-init.js`) creates: Ed25519 keypair, trusted key store, nonce store, and empty ledger.
 - Canonicalization uses recursive sorted-key JSON serialization (see Section 6).
 - Tests cover: tampering detection, deletion detection, reordering detection, replay prevention, untrusted key rejection, and full chain verification.
-- The reference implementation includes 73 conformance tests (44 Node.js + 29 Python).
+- The reference implementation includes local conformance tests. See README and test files (`test_tamper.js`, `test_chain.js`) for the current count.
 
 ---
 
@@ -388,6 +392,7 @@ The following is a synthetic example receipt using fake data. It does not contai
 - **Independent verifier format:** The verifier interface may be separated into its own specification.
 - **Multi-signer receipts:** Support for co-signatures or multi-party receipts is not defined in v0.1.
 - **Key rotation:** Procedures for rotating signing keys while maintaining chain integrity are not defined in v0.1.
+- **Relationship to adjacent specs:** The `spec/` directory contains Bondi packet, routing, and authority boundary specifications. A future version should clarify the formal relationship between those specs and this receipt protocol specification. This PR does not modify those files.
 
 ---
 
