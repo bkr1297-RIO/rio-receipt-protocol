@@ -161,6 +161,8 @@ Only the approved action runs, and the outcome is verifiable.
 
 ## How the Receipt Protocol Works
 
+For the standards-style receipt protocol specification, see [`spec/RIO_RECEIPT_PROTOCOL_v0.1.md`](spec/RIO_RECEIPT_PROTOCOL_v0.1.md).
+
 ### Receipt Fields
 
 Every receipt contains:
