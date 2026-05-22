@@ -9,7 +9,8 @@
     "verify": "node verify_receipt.js",
     "verify-chain": "node verify-chain.js",
     "test": "node test_tamper.js && node test_chain.js && node test/spgm-receipt-mapping.test.js",
-    "spgm": "node test/spgm-receipt-mapping.test.js"
+    "spgm": "node test/spgm-receipt-mapping.test.js",
+    "spgm:demo": "node scripts/run_spgm_demo.js"
   },
   "keywords": [
     "receipt",
