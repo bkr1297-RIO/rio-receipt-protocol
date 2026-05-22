@@ -1,0 +1,65 @@
+{
+  "receipt_id": "6d8de0f3-166f-499d-90da-463bc95d89f2",
+  "timestamp": "2026-05-22T00:00:00.000Z",
+  "intent_hash": "a1c8447c7f7743f70844bae3f6b2b176f648f8185613f076b030f3575bf263ff",
+  "execution_hash": "38db708fe6df0a4430ea68a5180261cbb105c3b88d7b6b3084afcd0f95be97a9",
+  "mus_unit_id": "mus:spgm-example",
+  "validation": {
+    "decision": "BLOCK",
+    "checks": {
+      "intent_match": false,
+      "context_match": true,
+      "scope_valid": false,
+      "execution_path_valid": true,
+      "spgm_human_authority_preserved": true,
+      "spgm_signal_not_command": true,
+      "spgm_interpretation_provisional": true,
+      "spgm_fact_symbol_separated": true,
+      "spgm_machine_boundary_preserved": true,
+      "spgm_consequence_classified": true,
+      "spgm_rio_muss_routing_identified": true,
+      "spgm_recurrence_not_proof": true,
+      "spgm_pattern_promotion_not_authority": true,
+      "spgm_containment_applied": true
+    },
+    "policy_version": "1.0.0",
+    "spgm": {
+      "profile": "SPG-M",
+      "profile_version": "0.1",
+      "policy_version": "0.1.0",
+      "outcome": "CONTAIN",
+      "consequence_class": 3,
+      "literal_signal_captured": true,
+      "interpretation_status": "provisional",
+      "proposed_action": "send_email",
+      "containment_reason": "Symbolic signal may be meaningful, but it does not authorize external action toward another person.",
+      "rio_routing_status": "required_before_relational_action",
+      "muss_routing_status": "required_if_consent_scope_or_memory_implicated",
+      "machine_assistance_used": true,
+      "machine_authority_status": "non_sovereign",
+      "non_claims": {
+        "not_fixed_identity": true,
+        "not_destiny_claim": true,
+        "not_command_signal": true,
+        "not_metaphysical_proof": true,
+        "not_action_authorization": true,
+        "not_external_fact_claim": true,
+        "not_proof_about_another_person": true
+      }
+    }
+  },
+  "decision": "BLOCK",
+  "approval": {
+    "approval_id": "b7d15070-0d41-41a6-a82c-2a5e603e6fc4",
+    "intent_hash": "a1c8447c7f7743f70844bae3f6b2b176f648f8185613f076b030f3575bf263ff",
+    "authorizer": "human:spgm-example",
+    "nonce": "6900a031-fc0e-4013-baa6-f6c7a6d28ea1"
+  },
+  "chain_reference": {
+    "previous_receipt_hash": null
+  },
+  "receipt_hash": "f706b4b33692dff1550be16b368126cf0a390c78df52a89455e88afac3f756a5",
+  "signature": "749e0319b8a9c211b44e5070916ddc65732b845d98676ebe5c932821d85581d84a62497fce5adec0fc87c8cbcb33197745e71b81a5fd6339f228584434518603",
+  "signature_algorithm": "Ed25519",
+  "public_key": "302a300506032b6570032100d1ecde64d87a5029e33ed4fc645d71b988e05b3f6aec08aa3aac330ee5cd0de0"
+}
