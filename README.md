@@ -36,6 +36,30 @@ A self-contained, zero-dependency receipt engine that demonstrates:
 
 ---
 
+## SPG-M Profile
+
+This repository includes an optional SPG-M profile adapter for mapping pattern-governance outcomes into the existing RIO receipt proof layer.
+
+SPG-M does not change receipt cryptography, canonicalization, hash-chain verification, ledger behavior, or the current `ALLOW` / `BLOCK` decision model.
+
+Useful SPG-M files:
+
+- [`spgm/README.md`](spgm/README.md) — profile adapter overview
+- [`docs/SPGM_PROFILE.md`](docs/SPGM_PROFILE.md) — concise profile note
+- [`docs/SPG_M_VERIFICATION_NOTES.md`](docs/SPG_M_VERIFICATION_NOTES.md) — verification commands and expectations
+- [`docs/SPG_M_ENTERPRISE_PATTERN_GOVERNANCE.md`](docs/SPG_M_ENTERPRISE_PATTERN_GOVERNANCE.md) — enterprise framing
+- [`spec/SPG_M_RECEIPT_PROTOCOL_MAPPING_v0.1.md`](spec/SPG_M_RECEIPT_PROTOCOL_MAPPING_v0.1.md) — receipt mapping note
+- [`examples/spgm_containment_receipt.json`](examples/spgm_containment_receipt.json) — containment receipt example
+
+Run SPG-M checks directly:
+
+```bash
+npm run spgm
+npm run spgm:demo
+```
+
+---
+
 ## How This Repo Fits Into the Larger System
 
 | Repository | Role |
@@ -67,7 +91,7 @@ npm run verify-chain
 | Command | Result |
 |---------|--------|
 | `npm run init` | Creates your local identity, keypair, and empty ledger |
-| `npm test` | 21/21 tests pass (6 tamper + 15 chain) |
+| `npm test` | Runs core receipt tests and SPG-M mapping tests |
 | `npm run demo` | 2 receipts created (1 ALLOW + 1 BLOCK), ledger VALID |
 | `npm run verify-chain` | Full ledger chain verification → CHAIN VALID |
 
@@ -249,6 +273,15 @@ ledger.js                   ← Append-only hash-chain ledger module
 test_tamper.js              ← Tamper detection tests (6 cases)
 test_chain.js               ← Chain verification tests (7 cases)
 
+test/
+  spgm-receipt-mapping.test.js ← SPG-M profile mapping tests
+
+spgm/
+  constants.js               ← SPG-M profile constants
+  spgm-checks.js             ← SPG-M profile checks
+  map-spgm-to-receipt.js     ← Receipt-compatible mapping adapter
+  README.md                  ← SPG-M profile overview
+
 config/
   mus-unit.json             ← Your local unit config (created by init)
 
@@ -266,6 +299,7 @@ ledger/
 examples/
   valid_receipt.json
   denied_receipt.json
+  spgm_containment_receipt.json
 
 verifier/
   index.html                ← Browser-based verifier
@@ -290,6 +324,9 @@ node test_tamper.js
 
 # Run only chain verification tests (7 cases, 15 assertions)
 node test_chain.js
+
+# Run only SPG-M mapping tests
+npm run spgm
 ```
 
 All tests use isolated temporary data and do not modify the real ledger.
