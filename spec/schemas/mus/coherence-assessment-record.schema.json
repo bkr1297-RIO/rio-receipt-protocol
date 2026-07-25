@@ -1,0 +1,557 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://docs.sovereignty-stack.internal/spec/schemas/mus/coherence-assessment-record.schema.json",
+  "title": "MUS Coherence Assessment Record",
+  "description": "Deterministic verifier-produced proof object binding an Admission Decision Receipt and a Consequence Attestation Receipt to derived conformance states, evidence status, verifier result, and a non-authoritative routing disposition. This record does not authorize execution, settlement, repair, or renewed intent.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "record_version",
+    "record_type",
+    "record_id",
+    "created_at",
+    "canonicalization",
+    "hash_algorithm",
+    "admission_receipt_hash",
+    "consequence_receipt_hash",
+    "verifier",
+    "evidence_status",
+    "verifier_result",
+    "conformance",
+    "routing_disposition",
+    "applied_rule_codes",
+    "chain"
+  ],
+  "properties": {
+    "record_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "record_type": {
+      "type": "string",
+      "const": "coherence_assessment"
+    },
+    "record_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "canonicalization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile",
+        "profile_version",
+        "hash_projection"
+      ],
+      "properties": {
+        "profile": {
+          "type": "string",
+          "const": "RIO-CANON"
+        },
+        "profile_version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "hash_projection": {
+          "type": "string",
+          "const": "MUS-CAR-ASSESS-HASH-1"
+        }
+      }
+    },
+    "hash_algorithm": {
+      "type": "string",
+      "const": "sha256"
+    },
+    "admission_receipt_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "Hash of the Admission Decision Receipt evaluated by this assessment."
+    },
+    "consequence_receipt_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "Hash of the Consequence Attestation Receipt evaluated by this assessment."
+    },
+    "execution_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "execution_id",
+        "authorization_nonce",
+        "authorization_nonce_state"
+      ],
+      "properties": {
+        "execution_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "authorization_nonce": {
+          "type": "string",
+          "minLength": 1
+        },
+        "authorization_nonce_state": {
+          "type": "string",
+          "enum": [
+            "ISSUED",
+            "RESERVED",
+            "RELEASED",
+            "CONSUMED",
+            "REVOKED",
+            "EXPIRED",
+            "ABORTED_BEFORE_RELEASE",
+            "RECOVERY_REQUIRED"
+          ]
+        },
+        "execution_attempt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "mandate_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "occurrence_index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "verifier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "verifier_id",
+        "verifier_version",
+        "ruleset_hash",
+        "evaluation_profile",
+        "evaluation_profile_version"
+      ],
+      "properties": {
+        "verifier_id": {
+          "type": "string",
+          "const": "MUS_SEMANTIC_VERIFIER"
+        },
+        "verifier_version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "ruleset_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "evaluation_profile": {
+          "type": "string",
+          "const": "MUS-CONSEQUENCE-ATTESTATION-SEMANTICS"
+        },
+        "evaluation_profile_version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        }
+      }
+    },
+    "evidence_status": {
+      "type": "string",
+      "enum": [
+        "COMPLETE",
+        "INCOMPLETE",
+        "CONTRADICTORY",
+        "UNAVAILABLE"
+      ]
+    },
+    "verifier_result": {
+      "type": "string",
+      "enum": [
+        "VALID",
+        "INVALID",
+        "UNRESOLVED"
+      ]
+    },
+    "conformance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action_conformance",
+        "consequence_conformance"
+      ],
+      "properties": {
+        "action_conformance": {
+          "type": "string",
+          "enum": [
+            "MATCH",
+            "MISMATCH",
+            "NOT_EXECUTED",
+            "INDETERMINATE"
+          ]
+        },
+        "consequence_conformance": {
+          "type": "string",
+          "enum": [
+            "MATCH",
+            "MISMATCH",
+            "NO_CONSEQUENCE",
+            "NOT_EVALUATED",
+            "INDETERMINATE"
+          ]
+        },
+        "consequence_evaluation_mode": {
+          "type": "string",
+          "enum": [
+            "EXACT_HASH",
+            "CONTRACT",
+            "NONE"
+          ]
+        },
+        "authorized_action_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "actual_action_hash": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "authorized_consequence_contract_hash": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "observed_consequence_hash": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "consequence_evaluator_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "consequence_evaluator_version": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        }
+      }
+    },
+    "routing_disposition": {
+      "type": "string",
+      "enum": [
+        "NONE_INDICATED",
+        "REVIEW_REQUIRED",
+        "REPAIR_CANDIDATE",
+        "HUMAN_DETERMINATION_REQUIRED",
+        "RECOVERY_REQUIRED",
+        "SECURITY_REVIEW_REQUIRED"
+      ],
+      "description": "Deterministically derived routing instruction. It is not authorization, repair, settlement, diagnosis, or a completed REAL judgment."
+    },
+    "applied_rule_codes": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+){2,}$"
+      }
+    },
+    "invalidity_reasons": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z][A-Z0-9_]{2,127}$"
+      }
+    },
+    "unresolved_reasons": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z][A-Z0-9_]{2,127}$"
+      }
+    },
+    "verifier_attestation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "attestation_type",
+        "key_id",
+        "signature_encoding",
+        "signed_projection",
+        "signature"
+      ],
+      "properties": {
+        "attestation_type": {
+          "type": "string",
+          "const": "ed25519"
+        },
+        "key_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "signature_encoding": {
+          "type": "string",
+          "const": "base64url-nopad"
+        },
+        "signed_projection": {
+          "type": "string",
+          "const": "COHERENCE_ASSESSMENT_WITHOUT_SIGNATURE_AND_RECORD_HASH"
+        },
+        "signature": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{86}$"
+        }
+      }
+    },
+    "chain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "chain_position",
+        "previous_record_hash",
+        "record_hash"
+      ],
+      "properties": {
+        "chain_position": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 9007199254740991
+        },
+        "previous_record_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "Must equal consequence_receipt_hash when the Consequence Attestation Receipt immediately precedes this assessment."
+        },
+        "record_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "SHA-256 projection hash over the RIO-CANON serialization excluding /chain/record_hash."
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "verifier_result": {
+            "const": "VALID"
+          }
+        },
+        "required": [
+          "verifier_result"
+        ]
+      },
+      "then": {
+        "properties": {
+          "evidence_status": {
+            "const": "COMPLETE"
+          }
+        },
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "invalidity_reasons"
+              ]
+            },
+            {
+              "required": [
+                "unresolved_reasons"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "verifier_result": {
+            "const": "INVALID"
+          }
+        },
+        "required": [
+          "verifier_result"
+        ]
+      },
+      "then": {
+        "required": [
+          "invalidity_reasons"
+        ],
+        "properties": {
+          "invalidity_reasons": {
+            "minItems": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "verifier_result": {
+            "const": "UNRESOLVED"
+          }
+        },
+        "required": [
+          "verifier_result"
+        ]
+      },
+      "then": {
+        "required": [
+          "unresolved_reasons"
+        ],
+        "properties": {
+          "unresolved_reasons": {
+            "minItems": 1
+          },
+          "routing_disposition": {
+            "enum": [
+              "REVIEW_REQUIRED",
+              "HUMAN_DETERMINATION_REQUIRED",
+              "RECOVERY_REQUIRED",
+              "SECURITY_REVIEW_REQUIRED"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "evidence_status": {
+            "enum": [
+              "INCOMPLETE",
+              "CONTRADICTORY",
+              "UNAVAILABLE"
+            ]
+          }
+        },
+        "required": [
+          "evidence_status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "verifier_result": {
+            "enum": [
+              "INVALID",
+              "UNRESOLVED"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "conformance": {
+            "properties": {
+              "consequence_evaluation_mode": {
+                "const": "CONTRACT"
+              }
+            },
+            "required": [
+              "consequence_evaluation_mode"
+            ]
+          }
+        },
+        "required": [
+          "conformance"
+        ]
+      },
+      "then": {
+        "properties": {
+          "conformance": {
+            "required": [
+              "authorized_consequence_contract_hash",
+              "consequence_evaluator_id",
+              "consequence_evaluator_version"
+            ],
+            "properties": {
+              "authorized_consequence_contract_hash": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "consequence_evaluator_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "consequence_evaluator_version": {
+                "type": "string",
+                "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "conformance": {
+            "properties": {
+              "action_conformance": {
+                "const": "INDETERMINATE"
+              }
+            },
+            "required": [
+              "action_conformance"
+            ]
+          }
+        },
+        "required": [
+          "conformance"
+        ]
+      },
+      "then": {
+        "properties": {
+          "verifier_result": {
+            "const": "UNRESOLVED"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "conformance": {
+            "properties": {
+              "consequence_conformance": {
+                "const": "INDETERMINATE"
+              }
+            },
+            "required": [
+              "consequence_conformance"
+            ]
+          }
+        },
+        "required": [
+          "conformance"
+        ]
+      },
+      "then": {
+        "properties": {
+          "verifier_result": {
+            "const": "UNRESOLVED"
+          }
+        }
+      }
+    }
+  ]
+}
