@@ -1,0 +1,284 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://one-rio-muss.example/specs/vesper-shadow-fixture-performance-manifest-001/v0.1",
+  "title": "VESPER Shadow Fixture & Performance Manifest 001",
+  "manifest_id": "VESPER-SHADOW-FIXTURE-PERFORMANCE-MANIFEST-001",
+  "manifest_version": "0.1",
+  "status": "CANDIDATE_CONFORMANCE_PACK",
+  "issued_at": "2026-08-04T00:00:00Z",
+  "scope": {
+    "environment": "vesper-github-shadow-sandbox",
+    "effect_class": "ZERO_EFFECT",
+    "data_classification": "SYNTHETIC",
+    "live_connector_usable": false,
+    "external_execution_permitted": false,
+    "prohibited_operations": [
+      "network_egress",
+      "github_mutation",
+      "credential_use",
+      "repository_change",
+      "deployment",
+      "orientation_promotion",
+      "authority_creation"
+    ]
+  },
+  "conformance_subject": {
+    "connector_id": "vesper.github.shadow.post.v1",
+    "target_ref": "target://vesper/github-shadow/post/v1",
+    "method": "POST",
+    "path_and_query": "/github/post",
+    "audience": "vesper-github-shadow-sandbox",
+    "max_body_bytes": 16384,
+    "max_execution_count": 1,
+    "authority_class": "SHADOW_ONLY_NON_EXPORTABLE",
+    "issuer_key_ref": "test-key://vesper-shadow/registered-test-key/v1",
+    "network_egress_enforcement": {
+      "mode": "DENY_ALL_ENVIRONMENT_ENFORCED",
+      "required_evidence_type": "environment-level transport or namespace denial proof",
+      "application_log_sufficient": false
+    }
+  },
+  "normative_references": [
+    {
+      "artifact_id": "METRO-MINIMAL-CIRCULATION-ENVELOPE-001",
+      "version": "0.1",
+      "role": "circulation envelope"
+    },
+    {
+      "artifact_id": "SENTINEL-POU-CONFORMANCE-PROFILE-001",
+      "version": "0.1",
+      "role": "point-of-use fidelity profile"
+    },
+    {
+      "artifact_id": "CONSTITUTIONAL-OBJECT-METABOLISM-STATE-MACHINE-001",
+      "version": "0.1",
+      "role": "state grammar"
+    }
+  ],
+  "fixture_protocol": {
+    "payload_encoding": "utf-8",
+    "payload_hash_algorithm": "sha256",
+    "canonical_header_algorithm": "lowercase-name-value-map-sha256",
+    "signature_algorithm": "Ed25519",
+    "time_source": "fixture-clock",
+    "durable_reservation_required": true,
+    "automatic_retry_permitted": false,
+    "execution_mode": "SIMULATED_NO_EGRESS"
+  },
+  "canonical_material": {
+    "candidate": {
+      "object_id": "candidate_vesper_shadow_001",
+      "object_type": "Candidate",
+      "register": "candidate",
+      "source_station": "scribe_calypso",
+      "source_anchor": "synthetic://vesper-shadow/input/001",
+      "provenance": "DECLARED_SYNTHETIC"
+    },
+    "raw_request": {
+      "utf8": "{\"operation\":\"shadow.github.post\",\"resource\":\"synthetic://vesper/issue/001\",\"title\":\"zero-effect conformance specimen\"}",
+      "payload_hash": "sha256:c4d50150c7260c18adc9a1f18f7607c09398583728739454d959fbf163ce647b",
+      "headers": {
+        "content-type": "application/json",
+        "idempotency-key": "fixture-nonce-vesper-shadow-001"
+      },
+      "canonical_headers_hash": "DERIVE_AT_RUN_FROM_DECLARED_HEADERS"
+    },
+    "synthetic_grant": {
+      "grant_id": "grant_vesper_shadow_001",
+      "authority_binding_ref": "approval_vesper_shadow_001",
+      "issuer_key_id": "vesper-shadow-test-key-v1",
+      "nonce": "fixture-nonce-vesper-shadow-001",
+      "not_before": "2026-08-04T00:00:00Z",
+      "expires_at": "2026-08-04T00:05:00Z",
+      "signature": "FIXTURE_SIGNATURE_MUST_BE_GENERATED_BY_REGISTERED_TEST_KEY"
+    }
+  },
+  "required_success_state_sequence": [
+    "FORMED",
+    "ROUTED",
+    "REVIEWED",
+    "AUTHORITY_BOUND",
+    "RESERVED",
+    "PRE_DISPATCH_RECORDED",
+    "SIMULATED_NO_EGRESS",
+    "RECEIPTED",
+    "REMAINDER_OPEN",
+    "SETTLED",
+    "RETURNED_UNPROMOTED"
+  ],
+  "required_records": [
+    {
+      "type": "MetroEnvelope",
+      "before_state": "ROUTED",
+      "must_bind": ["route_id", "object_id", "scope", "expiry", "provenance"]
+    },
+    {
+      "type": "AuthorizationGrant",
+      "before_state": "AUTHORITY_BOUND",
+      "must_bind": ["target_ref", "method", "path_and_query", "canonical_headers_hash", "payload_hash", "nonce", "audience", "expiry"]
+    },
+    {
+      "type": "PreDispatchCrossingRecord",
+      "before_state": "PRE_DISPATCH_RECORDED",
+      "must_bind": ["grant_hash", "reservation_ref", "payload_hash", "target_ref", "sentinel_verdict"],
+      "durable": true,
+      "signed": true
+    },
+    {
+      "type": "ExecutionReceipt",
+      "before_state": "RECEIPTED",
+      "must_bind": ["pre_dispatch_record_hash", "terminal_outcome", "no_egress_evidence_ref", "effect_hash"],
+      "durable": true,
+      "signed": true
+    },
+    {
+      "type": "RemainderAccount",
+      "before_state": "REMAINDER_OPEN",
+      "must_bind": ["unexecuted_live_effect", "non_exportable_authority", "unpromoted_return"]
+    },
+    {
+      "type": "SettlementRecord",
+      "before_state": "SETTLED",
+      "must_bind": ["settled_scope", "unsettled_scope", "remainder_disposition"]
+    }
+  ],
+  "fixtures": [
+    {
+      "fixture_id": "VSF-001-HAPPY-SHADOW-ROUTE",
+      "kind": "positive",
+      "input_variant": "canonical_material",
+      "expected": {
+        "sentinel_verdict": "ALLOW_SHADOW_ONLY",
+        "terminal_state": "RETURNED_UNPROMOTED",
+        "required_state_sequence": "required_success_state_sequence",
+        "execution_state": "SIMULATED_NO_EGRESS",
+        "no_egress_proof_required": true,
+        "remainder_nonempty": true,
+        "orientation_status": "UNPROMOTED"
+      }
+    },
+    {
+      "fixture_id": "VSF-002-ONE-BYTE-PAYLOAD-MISMATCH",
+      "kind": "negative",
+      "mutation": {"byte_offset": 0, "operation": "flip_bit"},
+      "expected": {
+        "sentinel_verdict": "DENY_PAYLOAD_MISMATCH",
+        "terminal_state": "DENIED",
+        "forbidden_states": ["RESERVED", "PRE_DISPATCH_RECORDED", "SIMULATED_NO_EGRESS"],
+        "execution_count": 0
+      }
+    },
+    {
+      "fixture_id": "VSF-003-REVOKED-ISSUER",
+      "kind": "negative",
+      "mutation": {"issuer_key_status": "REVOKED_BEFORE_VERIFICATION"},
+      "expected": {
+        "sentinel_verdict": "DENY_REVOKED_ISSUER",
+        "terminal_state": "REVOKED",
+        "execution_count": 0
+      }
+    },
+    {
+      "fixture_id": "VSF-004-POST-RESERVATION-NO-DISPATCH",
+      "kind": "fault",
+      "injected_fault": "capability_release_failure_after_durable_reservation",
+      "expected": {
+        "terminal_state": "SETTLED_NO_DISPATCH",
+        "execution_count": 0,
+        "automatic_retry_count": 0,
+        "settlement_required": true
+      }
+    },
+    {
+      "fixture_id": "VSF-005-NO-EGRESS-PROOF-UNAVAILABLE",
+      "kind": "fault",
+      "injected_fault": "environment_no_egress_evidence_unavailable",
+      "expected": {
+        "terminal_state": "OUTCOME_UNKNOWN",
+        "success_claim_permitted": false,
+        "remainder_nonempty": true,
+        "automatic_retry_count": 0
+      }
+    },
+    {
+      "fixture_id": "VSF-006-RETURN-CANNOT-REAUTHORIZE",
+      "kind": "negative",
+      "mutation": {"attempt": "reuse_returned_unpromoted_orientation_as_authority"},
+      "expected": {
+        "sentinel_verdict": "DENY_UNAUTHORIZED_PROMOTION",
+        "terminal_state": "DENIED",
+        "execution_count": 0
+      }
+    },
+    {
+      "fixture_id": "VSF-007-ABANDONED-BRANCH-CANNOT-DISPATCH",
+      "kind": "negative",
+      "branch_lineage": {"relationship": "ABANDONED", "dispatchable": false},
+      "expected": {
+        "sentinel_verdict": "DENY_BRANCH_NOT_SELECTABLE",
+        "terminal_state": "DENIED",
+        "execution_count": 0
+      }
+    },
+    {
+      "fixture_id": "VSF-008-REPLAYED-NONCE",
+      "kind": "negative",
+      "precondition": "grant_vesper_shadow_001_already_durably_reserved",
+      "expected": {
+        "sentinel_verdict": "DENY_REPLAY",
+        "terminal_state": "DENIED",
+        "execution_count": 0
+      }
+    }
+  ],
+  "performance_manifest": {
+    "status": "MEASUREMENT_PROTOCOL_ONLY_NO_RESULTS_RECORDED",
+    "claim_boundary": "This manifest defines how to measure the declared shadow profile. It contains no latency, throughput, availability, or production performance claim.",
+    "measurement_scope": {
+      "included": [
+        "grant_parse_and_schema_validation",
+        "registered_key_resolution_and_signature_verification",
+        "target_and_canonical_header_verification",
+        "raw_byte_payload_hash_verification",
+        "durable_reservation",
+        "pre_dispatch_record_persistence",
+        "zero_egress_simulation",
+        "execution_receipt_persistence",
+        "remainder_and_settlement_record_persistence"
+      ],
+      "excluded": [
+        "live_network_latency",
+        "GitHub_API_latency",
+        "human_review_time",
+        "third_party_service_availability",
+        "production_key_management_latency",
+        "multi-node_replication_latency"
+      ]
+    },
+    "run_protocol": {
+      "clock": "monotonic_high_resolution",
+      "warmup_runs": 20,
+      "measured_runs": 100,
+      "concurrency": 1,
+      "environment_fingerprint_required": ["runtime_version", "host_os", "cpu_architecture", "durable_store_kind", "no_egress_enforcement_kind"],
+      "report_metrics": ["count", "min_ms", "p50_ms", "p95_ms", "p99_ms", "max_ms", "mean_ms", "failure_count"],
+      "report_phases_separately": true,
+      "fixture_required": "VSF-001-HAPPY-SHADOW-ROUTE"
+    },
+    "result_contract": {
+      "required_fields": ["implementation_ref", "run_id", "executed_at", "environment_fingerprint", "fixture_id", "metrics", "pass_fail", "evidence_refs"],
+      "prohibited_interpretations": [
+        "production_readiness",
+        "live_GitHub_performance",
+        "end_to_end_external_effect_latency",
+        "general-purpose_connector_performance"
+      ]
+    }
+  },
+  "conformance_verdict_rules": {
+    "PASS": "Every required fixture reaches its exact expected terminal state; required records resolve in one lineage; the positive fixture has environment-enforced no-egress evidence; and no prohibited operation occurred.",
+    "FAIL": "Any expected state, record, hash, authority boundary, replay rule, or zero-egress proof fails; any prohibited operation is attempted; or any successful outcome is claimed without required evidence.",
+    "INCONCLUSIVE": "A fixture cannot provide enough evidence to evaluate a declared requirement. INCONCLUSIVE is not PASS and cannot support a performance or runtime claim."
+  },
+  "evidence_limited_claim": "A PASS supports only the claim that the identified implementation version exercised the declared synthetic fixtures against one registered shadow connector with enforced zero egress. It does not authorize execution, prove live GitHub behavior, or establish production performance."
+}
