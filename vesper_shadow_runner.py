@@ -16,7 +16,6 @@ replace it with independently collected environment-level evidence.
 from __future__ import annotations
 
 import dataclasses
-import datetime as dt
 import hashlib
 import json
 import sys
@@ -36,10 +35,14 @@ MANIFEST_PATH = ROOT / "docs/conformance/fixtures/VESPER-SHADOW-FIXTURE-PERFORMA
 
 def digest(value: Any) -> str:
     """Hash canonical UTF-8 JSON or raw bytes, with a manifest-style prefix."""
-    raw = value if isinstance(value, bytes) else json.dumps(
+    raw = value if isinstance(value, bytes) else canonical_json_bytes(value)
+    return "sha256:" + hashlib.sha256(raw).hexdigest()
+
+
+def canonical_json_bytes(value: Any) -> bytes:
+    return json.dumps(
         value, sort_keys=True, separators=(",", ":")
     ).encode("utf-8")
-    return "sha256:" + hashlib.sha256(raw).hexdigest()
 
 
 def canonical_header_hash(headers: Dict[str, str]) -> str:
@@ -94,6 +97,16 @@ class RegisteredShadowTestKey:
         except Exception:  # InvalidSignature is deliberately treated as a refusal.
             return False
 
+    def sign_record(self, record: Dict[str, Any]) -> str:
+        return self._private.sign(canonical_json_bytes(record)).hex()
+
+    def verify_record(self, record: Dict[str, Any], signature_hex: str) -> bool:
+        try:
+            self.public_key.verify(bytes.fromhex(signature_hex), canonical_json_bytes(record))
+            return True
+        except (ValueError, Exception):
+            return False
+
 
 class DenyAllEnvironment:
     """Fixture-owned transport boundary; no socket or HTTP client exists here."""
@@ -138,19 +151,35 @@ class VesperShadowRunner:
         self.records.append({"type": "DurableReservation", "nonce": grant.nonce})
         return True
 
+    def _signed_record(self, record: Dict[str, Any]) -> Dict[str, Any]:
+        unsigned = {**record, "signer_key_id": KEY_ID}
+        signature_hex = self.key.sign_record(unsigned)
+        assert self.key.verify_record(unsigned, signature_hex), "synthetic record signature verification failed"
+        return {**unsigned, "signature_hex": signature_hex}
+
     def _record_happy_path(self, fixture_id: str) -> Dict[str, Any]:
         raw = self.manifest["canonical_material"]["raw_request"]
         payload = raw["utf8"].encode("utf-8")
         headers = raw["headers"]
+        subject = self.manifest["conformance_subject"]
+        self.records.append({
+            "type": "MetroEnvelope",
+            "route_id": "route_vesper_shadow_001",
+            "object_id": self.manifest["canonical_material"]["candidate"]["object_id"],
+            "scope": "synthetic-shadow-conformance",
+            "expiry": self.manifest["canonical_material"]["synthetic_grant"]["expires_at"],
+            "provenance": "DECLARED_SYNTHETIC",
+        })
         grant = self._grant(payload, headers, raw["headers"]["idempotency-key"])
         assert self.key.verify(grant), "fixture key signature verification failed"
         assert grant.payload_hash == raw["payload_hash"], "manifest payload does not match declared hash"
+        self.records.append({"type": "AuthorizationGrant", **dataclasses.asdict(grant), "target_ref": subject["target_ref"], "method": subject["method"], "path_and_query": subject["path_and_query"], "expiry": grant.expires_at})
         assert self._reserve(grant), "initial reservation unexpectedly replayed"
-        pre_dispatch = {"type": "PreDispatchCrossingRecord", "grant_hash": digest(dataclasses.asdict(grant)), "reservation_ref": grant.nonce, "payload_hash": grant.payload_hash, "sentinel_verdict": "ALLOW_SHADOW_ONLY"}
+        pre_dispatch = self._signed_record({"type": "PreDispatchCrossingRecord", "grant_hash": digest(dataclasses.asdict(grant)), "reservation_ref": grant.nonce, "payload_hash": grant.payload_hash, "target_ref": subject["target_ref"], "sentinel_verdict": "ALLOW_SHADOW_ONLY"})
         self.records.append(pre_dispatch)
-        no_egress = DenyAllEnvironment().block(self.manifest["conformance_subject"]["target_ref"], payload)
+        no_egress = DenyAllEnvironment().block(subject["target_ref"], payload)
         assert no_egress is not None
-        receipt = {"type": "ExecutionReceipt", "pre_dispatch_record_hash": digest(pre_dispatch), "terminal_outcome": "SIMULATED_NO_EGRESS", "no_egress_evidence_ref": digest(no_egress), "effect_hash": digest({"live_effect": "none"})}
+        receipt = self._signed_record({"type": "ExecutionReceipt", "pre_dispatch_record_hash": digest(pre_dispatch), "terminal_outcome": "SIMULATED_NO_EGRESS", "no_egress_evidence_ref": digest(no_egress), "effect_hash": digest({"live_effect": "none"})})
         settlement = {"type": "SettlementRecord", "settled_scope": "synthetic shadow execution", "unsettled_scope": "none", "remainder_disposition": "unpromoted learning candidate retained"}
         self.records.extend([receipt, {"type": "RemainderAccount", "unexecuted_live_effect": True, "non_exportable_authority": True, "unpromoted_return": True}, settlement])
         return {
@@ -162,6 +191,8 @@ class VesperShadowRunner:
             "no_egress_proof_required": True,
             "remainder_nonempty": True,
             "orientation_status": "UNPROMOTED",
+            "state_trace": self.manifest["required_success_state_sequence"],
+            "record_types": [record["type"] for record in self.records],
         }
 
     def execute(self, fixture_id: str) -> Dict[str, Any]:
@@ -178,29 +209,30 @@ class VesperShadowRunner:
             altered = bytes([payload[0] ^ 1]) + payload[1:]
             grant = self._grant(payload, headers, raw["headers"]["idempotency-key"])
             assert digest(altered) != grant.payload_hash
-            return {"fixture_id": fixture_id, "sentinel_verdict": "DENY_PAYLOAD_MISMATCH", "terminal_state": "DENIED", "execution_count": 0}
+            return {"fixture_id": fixture_id, "sentinel_verdict": "DENY_PAYLOAD_MISMATCH", "terminal_state": "DENIED", "execution_count": 0, "state_trace": ["FORMED", "DENIED"]}
         if fixture_id == "VSF-003-REVOKED-ISSUER":
             grant = self._grant(payload, headers, raw["headers"]["idempotency-key"])
             self.key.revoked = True
             assert not self.key.verify(grant)
-            return {"fixture_id": fixture_id, "sentinel_verdict": "DENY_REVOKED_ISSUER", "terminal_state": "REVOKED", "execution_count": 0}
+            return {"fixture_id": fixture_id, "sentinel_verdict": "DENY_REVOKED_ISSUER", "terminal_state": "REVOKED", "execution_count": 0, "state_trace": ["FORMED", "REVOKED"]}
         if fixture_id == "VSF-004-POST-RESERVATION-NO-DISPATCH":
             grant = self._grant(payload, headers, raw["headers"]["idempotency-key"])
             assert self._reserve(grant)
-            return {"fixture_id": fixture_id, "terminal_state": "SETTLED_NO_DISPATCH", "execution_count": 0, "automatic_retry_count": 0}
+            self.records.append({"type": "SettlementRecord", "settled_scope": "reservation only", "unsettled_scope": "synthetic dispatch", "remainder_disposition": "no dispatch attempted"})
+            return {"fixture_id": fixture_id, "terminal_state": "SETTLED_NO_DISPATCH", "execution_count": 0, "automatic_retry_count": 0, "settlement_recorded": True, "state_trace": ["FORMED", "RESERVED", "SETTLED"]}
         if fixture_id == "VSF-005-NO-EGRESS-PROOF-UNAVAILABLE":
             grant = self._grant(payload, headers, raw["headers"]["idempotency-key"])
             assert self._reserve(grant)
             assert DenyAllEnvironment(evidence_available=False).block("target://unavailable", payload) is None
-            return {"fixture_id": fixture_id, "terminal_state": "OUTCOME_UNKNOWN", "success_claim_permitted": False, "remainder_nonempty": True, "automatic_retry_count": 0}
+            return {"fixture_id": fixture_id, "terminal_state": "OUTCOME_UNKNOWN", "success_claim_permitted": False, "remainder_nonempty": True, "automatic_retry_count": 0, "state_trace": ["FORMED", "RESERVED", "OUTCOME_UNKNOWN"]}
         if fixture_id == "VSF-006-RETURN-CANNOT-REAUTHORIZE":
-            return {"fixture_id": fixture_id, "sentinel_verdict": "DENY_UNAUTHORIZED_PROMOTION", "terminal_state": "DENIED", "execution_count": 0}
+            return {"fixture_id": fixture_id, "sentinel_verdict": "DENY_UNAUTHORIZED_PROMOTION", "terminal_state": "DENIED", "execution_count": 0, "state_trace": ["RETURNED_UNPROMOTED", "DENIED"]}
         if fixture_id == "VSF-007-ABANDONED-BRANCH-CANNOT-DISPATCH":
-            return {"fixture_id": fixture_id, "sentinel_verdict": "DENY_BRANCH_NOT_SELECTABLE", "terminal_state": "DENIED", "execution_count": 0}
+            return {"fixture_id": fixture_id, "sentinel_verdict": "DENY_BRANCH_NOT_SELECTABLE", "terminal_state": "DENIED", "execution_count": 0, "state_trace": ["FORMED", "DENIED"]}
         if fixture_id == "VSF-008-REPLAYED-NONCE":
             grant = self._grant(payload, headers, raw["headers"]["idempotency-key"])
             assert self._reserve(grant) and not self._reserve(grant)
-            return {"fixture_id": fixture_id, "sentinel_verdict": "DENY_REPLAY", "terminal_state": "DENIED", "execution_count": 0}
+            return {"fixture_id": fixture_id, "sentinel_verdict": "DENY_REPLAY", "terminal_state": "DENIED", "execution_count": 0, "state_trace": ["FORMED", "RESERVED", "DENIED"]}
         raise ValueError(f"Unsupported fixture: {fixture_id}")
 
 
@@ -221,6 +253,17 @@ def main() -> int:
                 raise AssertionError(f"{fixture['fixture_id']}: missing required result field {field!r}")
             if actual[field] != value:
                 raise AssertionError(f"{fixture['fixture_id']}: {field}={actual[field]!r}, expected {value!r}")
+        forbidden = set(expected.get("forbidden_states", []))
+        observed = set(actual.get("state_trace", []))
+        if forbidden & observed:
+            raise AssertionError(f"{fixture['fixture_id']}: entered forbidden states {sorted(forbidden & observed)!r}")
+        if expected.get("settlement_required") and not actual.get("settlement_recorded"):
+            raise AssertionError(f"{fixture['fixture_id']}: settlement record required")
+        if fixture["fixture_id"] == "VSF-001-HAPPY-SHADOW-ROUTE":
+            required_types = {record["type"] for record in manifest["required_records"]}
+            missing = required_types - set(actual["record_types"])
+            if missing:
+                raise AssertionError(f"{fixture['fixture_id']}: missing required records {sorted(missing)!r}")
         results.append(actual)
         print(f"PASS {fixture['fixture_id']}: {actual['terminal_state']}")
     print(f"CONFORMANCE SUITE COMPLETE: {len(results)}/{len(manifest['fixtures'])} fixtures passed")
