@@ -1,8 +1,8 @@
 # ONE/RIO/MUSS Loom — Public Index 001 v0.1
 
 **Status:** Public navigation and evidence index.
-**Updated:** 2026-08-04
-**Scope:** Links only public repositories whose current public README was inspected on this date.
+**Updated:** 2026-08-13
+**Scope:** Links only public repositories whose current public README or public source surface was inspected on this date.
 **Not a claim of:** a unified runtime, an external standard, certification, legal or regulatory compliance, production readiness, or authority to execute.
 
 > **ONE/RIO/MUSS — Governed crossings for AI-mediated action.**
@@ -45,6 +45,8 @@ This diagram is an orientation map, not a declaration that all repositories are 
 
 No private repository, candidate architecture document, unverified deployment, credentialed connector, human-approval service, or research artifact is linked here. A repository becomes eligible only after its public source, role, and claim ceiling are independently reviewed and recorded.
 
+Recent Forge packets such as CTG-P5, CTCL-METRO, Pattern Kernel, and P16 Master Seed falsification remain off-index until a public conformance repository owner, release posture, and claim ceiling are chosen. Their local fixture results should not be inferred from this public Loom page.
+
 ## Current developer entry points
 
 - To inspect the protocol boundary, start with the [RIO Protocol README](https://github.com/bkr1297-RIO/rio-protocol/blob/main/README.md).
@@ -55,6 +57,8 @@ No private repository, candidate architecture document, unverified deployment, c
 ## Next evidence threshold
 
 The next Loom expansion is not another broad architecture claim. It is a pinned, independently reproducible evidence record for one named profile: exact repository reference, commands, environment, outputs, and a scoped verdict. That work may add a new public organ only after the result and its ceiling are reviewable.
+
+The next candidate public packets are documentation/conformance artifacts only: a Pattern Signature Schema, a multi-evaluator P16 decomposition harness, and a CTG/CTCL crosswalk. None should be described as runtime behavior until an implementation profile and verification record exist.
 
 ---
 
