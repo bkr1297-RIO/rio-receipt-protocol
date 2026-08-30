@@ -1,8 +1,8 @@
 # RIO Receipt Protocol
 
-**The proof layer for governed AI actions.**
+**A bounded receipt layer for governed-action records.**
 
-This repository is the local receipt engine — it creates, signs, and verifies cryptographic proof that an action was authorized, executed as approved, and recorded in a tamper-evident ledger.
+This repository is a local receipt-engine prototype. It creates, signs, and verifies tamper-evident records representing supplied authorization data, local validation results, reported execution data, and ledger linkage. Receipt integrity does not independently establish that external execution occurred or that the supplied authority was lawful.
 
 > This is **part of the RIO system**, not the entire system. It handles proof. Other repositories handle governance, observation, and interface.
 
@@ -17,7 +17,7 @@ RIO is a governed execution layer for AI systems. It sits between intelligent sy
 - AI proposes.
 - Humans approve when required.
 - RIO governs execution.
-- Receipts prove what happened.
+- Receipts preserve a signed, locally verifiable account of what the engine was told and checked.
 
 ---
 
@@ -27,7 +27,7 @@ A self-contained, zero-dependency receipt engine that demonstrates:
 
 - Creating cryptographically signed receipts for every governed action
 - Appending receipts to a hash-chained ledger (tamper-evident)
-- Verifying the full chain independently (no network, no accounts, no trust required)
+- Verifying the full chain locally (no network or accounts; verification still relies on the configured trust registry and any external checkpoints required by the claim)
 - Detecting tampering, deletion, reordering, and replay attacks
 
 **Classification:** C — Local Receipt Engine Prototype
@@ -75,7 +75,9 @@ The canonical protocol specification lives in [rio-protocol](https://github.com/
 
 ## 60-Second Quickstart
 
-> **Important:** You must run `npm run init` first. The repo ships without generated local state — no keypair, no ledger, no unit config. Init creates everything you need.
+> **Important:** You must run `npm run init` first. Initialization creates a fresh local unit, keypair, trust registry, nonce stores, and ledger for your checkout.
+>
+> Repository history contains public demonstration key material. Treat it as compromised demonstration data, not signer identity. See [`docs/KEY_HISTORY_NOTICE.md`](docs/KEY_HISTORY_NOTICE.md).
 
 ```bash
 git clone https://github.com/bkr1297-RIO/rio-receipt-protocol.git
@@ -116,13 +118,13 @@ init local unit
 
 ---
 
-## Core Invariant
+## Core Validation Invariant
 
-Nothing executes unless it exactly matches what was approved at the moment of execution — and that fact is provable.
+Within this prototype, an `ALLOW` receipt is emitted only when the supplied execution input exactly matches the approved intent and the other local validation checks pass. The receipt proves the integrity and signer attribution of that local record within its trust configuration; it does not by itself prove external occurrence.
 
 ---
 
-## What This Proves
+## What This Demonstrates Locally
 
 | Capability | How |
 |------------|-----|
@@ -131,7 +133,7 @@ Nothing executes unless it exactly matches what was approved at the moment of ex
 | Local hash-chain ledger | Append-only JSONL with `receipt_hash` → `previous_receipt_hash` linkage |
 | Ledger chain verification | `verify-chain.js` validates every link |
 | Tamper detection | Modified receipt body → hash mismatch → FAIL |
-| Deletion detection | Missing chain entry → broken link → FAIL |
+| Interior deletion detection | Missing interior chain entry → broken link → FAIL; tail truncation or whole-ledger replacement requires an external trusted head/checkpoint |
 | Reorder detection | Wrong `previous_receipt_hash` → FAIL |
 | Untrusted-key detection | Receipt signed by unknown key → REJECTED |
 | Replay prevention | Reused nonce → BLOCKED |
@@ -235,7 +237,7 @@ Each receipt links to the previous via `previous_receipt_hash`. This creates an 
 |----------|-----------|
 | Integrity | SHA-256 hash of canonical receipt body |
 | Authenticity | Ed25519 signature over receipt body |
-| Non-repudiation | Signature ties receipt to specific keypair |
+| Signer attribution | Signature ties receipt to a keypair within the configured trust registry; key custody remains a separate burden |
 | Replay prevention | One-time nonces, tracked and rejected on reuse |
 | Tamper evidence | Hash chain links every receipt to its predecessor |
 | Trust boundary | Only receipts signed by trusted keys pass verification |
@@ -343,7 +345,7 @@ All tests use isolated temporary data and do not modify the real ledger.
 
 ## One-Line Summary
 
-If it changes, it doesn't run. If it runs, you can prove it.
+If the supplied execution input changes, local validation blocks it. If a receipt is issued, its signed local account can be checked within the declared trust boundary.
 
 ---
 
