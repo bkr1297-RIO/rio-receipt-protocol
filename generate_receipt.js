@@ -18,6 +18,12 @@
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
+const {
+  buildSignedReceiptBody,
+  canonicalize,
+  sha256,
+  validateExecution,
+} = require("./receipt-core");
 
 // --- Paths ---
 
@@ -111,28 +117,6 @@ function checkAndRecordNonce(nonce) {
   return true;
 }
 
-// --- Helpers ---
-
-function sha256(data) {
-  return crypto.createHash("sha256").update(data, "utf8").digest("hex");
-}
-
-function canonicalize(obj) {
-  if (obj === null || typeof obj !== 'object') {
-    return JSON.stringify(obj);
-  }
-
-  if (Array.isArray(obj)) {
-    return '[' + obj.map(canonicalize).join(',') + ']';
-  }
-
-  const sortedKeys = Object.keys(obj).sort();
-
-  return '{' + sortedKeys.map(key => {
-    return JSON.stringify(key) + ':' + canonicalize(obj[key]);
-  }).join(',') + '}';
-}
-
 function sign(payload, privKey) {
   return crypto.sign(null, Buffer.from(payload, "utf8"), privKey).toString("hex");
 }
@@ -148,37 +132,8 @@ function now() {
 // --- Execution Validation Layer (3 — real checks) ---
 
 function validate(intent, executionInput, approval) {
-  const intentHash = sha256(canonicalize(intent));
-  const executionHash = sha256(canonicalize(executionInput));
-
-  // intent_match: deep equality between approved intent and execution input
-  const intent_match = intentHash === executionHash;
-
-  // context_match: approval intent_hash matches the intent being executed
-  const context_match = approval.intent_hash === intentHash;
-
-  // scope_valid: execution action is within approved scope
-  const scope_valid = executionInput.action === approval.scope;
-
-  // execution_path_valid: execution uses an allowed action
   const ALLOWED_ACTIONS = ["send_email", "create_document", "schedule_meeting"];
-  const execution_path_valid = ALLOWED_ACTIONS.includes(executionInput.action);
-
-  const checks = {
-    intent_match,
-    context_match,
-    scope_valid,
-    execution_path_valid,
-  };
-
-  // Fail-closed: ANY check fails → BLOCK (4)
-  const allPass = Object.values(checks).every(Boolean);
-
-  return {
-    decision: allPass ? "ALLOW" : "BLOCK",
-    checks,
-    policy_version: "1.0.0",
-  };
+  return validateExecution(intent, executionInput, approval, ALLOWED_ACTIONS);
 }
 
 // --- Rasmussen Receipt Construction ---
@@ -187,7 +142,7 @@ function constructReceipt(intent, executionInput, approval, validation, previous
   const intentHash = sha256(canonicalize(intent));
   const executionHash = sha256(canonicalize(executionInput));
 
-  const receiptBody = {
+  const receiptBody = buildSignedReceiptBody({
     receipt_id: makeId(),
     timestamp: now(),
     intent_hash: intentHash,
@@ -208,7 +163,7 @@ function constructReceipt(intent, executionInput, approval, validation, previous
     chain_reference: {
       previous_receipt_hash: previousReceiptHash,
     },
-  };
+  });
 
   const payload = canonicalize(receiptBody);
   const receiptHash = sha256(payload);
