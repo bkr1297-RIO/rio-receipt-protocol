@@ -8,7 +8,7 @@
     "demo": "node demo.js",
     "verify": "node verify_receipt.js",
     "verify-chain": "node verify-chain.js",
-    "test": "node test_tamper.js && node test_chain.js && node test/spgm-receipt-mapping.test.js && node test/coherence-assessment.test.js",
+    "test": "node test_tamper.js && node test_chain.js && node test/spgm-receipt-mapping.test.js && node test/coherence-assessment.test.js && node test/receipt-core-regression.test.js",
     "spgm": "node test/spgm-receipt-mapping.test.js",
     "spgm:demo": "node scripts/run_spgm_demo.js",
     "sourceboard:test": "node test/constitutional-sourceboard.test.js && node test/sourceboard-to-sim-mus-demo.test.js && node test/sourceboard-to-real-receipt-demo.test.js",
