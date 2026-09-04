@@ -17,33 +17,16 @@
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
+const {
+  buildSignedReceiptBody,
+  canonicalize,
+  sha256,
+} = require("./receipt-core");
 
 // --- Paths ---
 
 const TRUSTED_KEYS_PATH = path.join(__dirname, "trust", "trusted_keys.json");
 const NONCE_STORE_PATH = path.join(__dirname, "runtime", "verified_nonces.json");
-
-// --- Helpers ---
-
-function sha256(data) {
-  return crypto.createHash("sha256").update(data, "utf8").digest("hex");
-}
-
-function canonicalize(obj) {
-  if (obj === null || typeof obj !== 'object') {
-    return JSON.stringify(obj);
-  }
-
-  if (Array.isArray(obj)) {
-    return '[' + obj.map(canonicalize).join(',') + ']';
-  }
-
-  const sortedKeys = Object.keys(obj).sort();
-
-  return '{' + sortedKeys.map(key => {
-    return JSON.stringify(key) + ':' + canonicalize(obj[key]);
-  }).join(',') + '}';
-}
 
 // --- Trust anchor ---
 
@@ -81,16 +64,7 @@ function verifyReceipt(receipt) {
   };
 
   // 1. Recompute receipt_hash
-  const body = {
-    receipt_id: receipt.receipt_id,
-    timestamp: receipt.timestamp,
-    intent_hash: receipt.intent_hash,
-    execution_hash: receipt.execution_hash,
-    validation: receipt.validation,
-    decision: receipt.decision,
-    approval: receipt.approval,
-    chain_reference: receipt.chain_reference,
-  };
+  const body = buildSignedReceiptBody(receipt);
 
   const payload = canonicalize(body);
   const computedHash = sha256(payload);

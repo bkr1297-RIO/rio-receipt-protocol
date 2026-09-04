@@ -15,13 +15,16 @@ replace it with independently collected environment-level evidence.
 
 from __future__ import annotations
 
+import argparse
 import dataclasses
 import hashlib
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any, Dict, List
 
+from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import (
     Ed25519PrivateKey,
     Ed25519PublicKey,
@@ -107,6 +110,13 @@ class RegisteredShadowTestKey:
         except (ValueError, Exception):
             return False
 
+    def public_key_spki_der_hex(self) -> str:
+        """Export only the test public key so a fresh verifier can check records."""
+        return self.public_key.public_bytes(
+            encoding=serialization.Encoding.DER,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo,
+        ).hex()
+
 
 class DenyAllEnvironment:
     """Fixture-owned transport boundary; no socket or HTTP client exists here."""
@@ -175,12 +185,56 @@ class VesperShadowRunner:
         assert grant.payload_hash == raw["payload_hash"], "manifest payload does not match declared hash"
         self.records.append({"type": "AuthorizationGrant", **dataclasses.asdict(grant), "target_ref": subject["target_ref"], "method": subject["method"], "path_and_query": subject["path_and_query"], "expiry": grant.expires_at})
         assert self._reserve(grant), "initial reservation unexpectedly replayed"
-        pre_dispatch = self._signed_record({"type": "PreDispatchCrossingRecord", "grant_hash": digest(dataclasses.asdict(grant)), "reservation_ref": grant.nonce, "payload_hash": grant.payload_hash, "target_ref": subject["target_ref"], "sentinel_verdict": "ALLOW_SHADOW_ONLY"})
+        pre_dispatch = self._signed_record({"type": "PreDispatchCrossingRecord", "record_id": f"pre-dispatch:{fixture_id}", "grant_hash": digest(dataclasses.asdict(grant)), "reservation_ref": grant.nonce, "payload_hash": grant.payload_hash, "target_ref": subject["target_ref"], "sentinel_verdict": "ALLOW_SHADOW_ONLY"})
         self.records.append(pre_dispatch)
+        attempt = self._signed_record({
+            "type": "ExecutionAttempt",
+            "attempt_id": f"attempt:{fixture_id}",
+            "pre_dispatch_record_hash": digest(pre_dispatch),
+            "mode": "SIMULATED_NO_EGRESS",
+            "target_ref": subject["target_ref"],
+            "payload_hash": grant.payload_hash,
+            "attempted_at": "2026-08-04T00:00:01Z",
+            "external_call_count": 0,
+            "standing_effect": "NONE",
+        })
+        self.records.append(attempt)
         no_egress = DenyAllEnvironment().block(subject["target_ref"], payload)
         assert no_egress is not None
-        receipt = self._signed_record({"type": "ExecutionReceipt", "pre_dispatch_record_hash": digest(pre_dispatch), "terminal_outcome": "SIMULATED_NO_EGRESS", "no_egress_evidence_ref": digest(no_egress), "effect_hash": digest({"live_effect": "none"})})
-        settlement = {"type": "SettlementRecord", "settled_scope": "synthetic shadow execution", "unsettled_scope": "none", "remainder_disposition": "unpromoted learning candidate retained"}
+        occurrence = self._signed_record({
+            "type": "TransitionOccurrence",
+            "occurrence_id": f"occurrence:{fixture_id}",
+            "attempt_ref": attempt["attempt_id"],
+            "effect_type": "LOCAL_DENY_ALL_RESULT_RECORDED",
+            "target_ref": subject["target_ref"],
+            "payload_hash": grant.payload_hash,
+            "local_effect": "FIXTURE_BOUNDARY_RETURNED_EGRESS_BLOCKED",
+            "external_effect": "NOT_CLAIMED",
+            "environment_evidence": no_egress,
+            "occurred_at": "2026-08-04T00:00:02Z",
+            "standing_effect": "NONE",
+        })
+        self.records.append(occurrence)
+        receipt = self._signed_record({"type": "ExecutionReceipt", "record_id": f"execution-receipt:{fixture_id}", "pre_dispatch_record_hash": digest(pre_dispatch), "attempt_ref": attempt["attempt_id"], "occurrence_ref": occurrence["occurrence_id"], "occurrence_hash": digest(occurrence), "terminal_outcome": "SIMULATED_NO_EGRESS", "no_egress_evidence_ref": digest(no_egress), "effect_hash": digest({"live_effect": "none"})})
+        settlement = {
+            "type": "SettlementRecord",
+            "standing": "PROVISIONAL_SOURCE_RECORD_NOT_CLOSURE",
+            "settled_scope": ["fixture-local deny-all result recorded"],
+            "unsettled_scope": [
+                "separately attributable observation and evidence admission",
+                "durable MUS ledger incorporation",
+                "SourcePoint return acknowledgement",
+                "OS-level egress enforcement",
+                "external GitHub occurrence",
+                "human authority",
+                "production security",
+                "federation",
+                "Human Return",
+            ],
+            "remainder_disposition": "unpromoted learning candidate retained",
+            "authority_effect": "NONE",
+            "standing_effect": "NONE",
+        }
         self.records.extend([receipt, {"type": "RemainderAccount", "unexecuted_live_effect": True, "non_exportable_authority": True, "unpromoted_return": True}, settlement])
         return {
             "fixture_id": fixture_id,
@@ -236,34 +290,88 @@ class VesperShadowRunner:
         raise ValueError(f"Unsupported fixture: {fixture_id}")
 
 
+def validate_fixture_result(manifest: Dict[str, Any], fixture_id: str, actual: Dict[str, Any]) -> None:
+    fixture = next(
+        (item for item in manifest["fixtures"] if item["fixture_id"] == fixture_id),
+        None,
+    )
+    if fixture is None:
+        raise ValueError(f"Unsupported fixture: {fixture_id}")
+    expected = fixture["expected"]
+    for field, value in expected.items():
+        if field in {"forbidden_states", "settlement_required"}:
+            continue
+        if field not in actual:
+            raise AssertionError(f"{fixture_id}: missing required result field {field!r}")
+        if actual[field] != value:
+            raise AssertionError(f"{fixture_id}: {field}={actual[field]!r}, expected {value!r}")
+    forbidden = set(expected.get("forbidden_states", []))
+    observed = set(actual.get("state_trace", []))
+    if forbidden & observed:
+        raise AssertionError(f"{fixture_id}: entered forbidden states {sorted(forbidden & observed)!r}")
+    if expected.get("settlement_required") and not actual.get("settlement_recorded"):
+        raise AssertionError(f"{fixture_id}: settlement record required")
+    if fixture_id == "VSF-001-HAPPY-SHADOW-ROUTE":
+        required_types = {record["type"] for record in manifest["required_records"]}
+        missing = required_types - set(actual["record_types"])
+        if missing:
+            raise AssertionError(f"{fixture_id}: missing required records {sorted(missing)!r}")
+
+
+def export_fixture(manifest: Dict[str, Any], fixture_id: str, output_path: Path) -> Dict[str, Any]:
+    """Persist one fixture packet for an independently started downstream verifier."""
+    runner = VesperShadowRunner(manifest)
+    result = runner.execute(fixture_id)
+    validate_fixture_result(manifest, fixture_id, result)
+    packet = {
+        "schema_version": "one.vesper-shadow-export.v0.1",
+        "fixture_id": fixture_id,
+        "runner": "vesper_shadow_runner.py",
+        "signer": {
+            "key_id": KEY_ID,
+            "algorithm": "Ed25519",
+            "public_key_spki_der_hex": runner.key.public_key_spki_der_hex(),
+            "standing": "PROCESS_SCOPED_TEST_SIGNER",
+        },
+        "records": runner.records,
+        "result": result,
+        "claim_ceiling": {
+            "environment": "LOCAL_SYNTHETIC_ZERO_EGRESS",
+            "external_occurrence": "NOT_CLAIMED",
+            "human_authority": "NOT_ESTABLISHED",
+            "production_standing": "ABSENT",
+        },
+    }
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with output_path.open("w", encoding="utf-8") as handle:
+        json.dump(packet, handle, sort_keys=True, separators=(",", ":"))
+        handle.write("\n")
+        handle.flush()
+        os.fsync(handle.fileno())
+    return packet
+
+
 def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--fixture", help="Run and export one declared fixture")
+    parser.add_argument("--output", type=Path, help="Write the single-fixture JSON packet here")
+    args = parser.parse_args()
     if not MANIFEST_PATH.is_file():
         print(f"ERROR: required manifest not found: {MANIFEST_PATH}", file=sys.stderr)
         return 2
     manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+    if bool(args.fixture) != bool(args.output):
+        parser.error("--fixture and --output must be supplied together")
+    if args.fixture and args.output:
+        packet = export_fixture(manifest, args.fixture, args.output)
+        print(f"PASS {args.fixture}: {packet['result']['terminal_state']}")
+        print(f"EXPORTED {args.output}")
+        return 0
     runner = VesperShadowRunner(manifest)
     results = []
     for fixture in manifest["fixtures"]:
         actual = runner.execute(fixture["fixture_id"])
-        expected = fixture["expected"]
-        for field, value in expected.items():
-            if field in {"forbidden_states", "settlement_required"}:
-                continue
-            if field not in actual:
-                raise AssertionError(f"{fixture['fixture_id']}: missing required result field {field!r}")
-            if actual[field] != value:
-                raise AssertionError(f"{fixture['fixture_id']}: {field}={actual[field]!r}, expected {value!r}")
-        forbidden = set(expected.get("forbidden_states", []))
-        observed = set(actual.get("state_trace", []))
-        if forbidden & observed:
-            raise AssertionError(f"{fixture['fixture_id']}: entered forbidden states {sorted(forbidden & observed)!r}")
-        if expected.get("settlement_required") and not actual.get("settlement_recorded"):
-            raise AssertionError(f"{fixture['fixture_id']}: settlement record required")
-        if fixture["fixture_id"] == "VSF-001-HAPPY-SHADOW-ROUTE":
-            required_types = {record["type"] for record in manifest["required_records"]}
-            missing = required_types - set(actual["record_types"])
-            if missing:
-                raise AssertionError(f"{fixture['fixture_id']}: missing required records {sorted(missing)!r}")
+        validate_fixture_result(manifest, fixture["fixture_id"], actual)
         results.append(actual)
         print(f"PASS {fixture['fixture_id']}: {actual['terminal_state']}")
     print(f"CONFORMANCE SUITE COMPLETE: {len(results)}/{len(manifest['fixtures'])} fixtures passed")

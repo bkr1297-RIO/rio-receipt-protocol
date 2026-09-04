@@ -26,9 +26,27 @@ Expected terminal behavior:
 - the synthetic Ed25519 test key exists only in process memory and is never
   represented as human authority.
 
+The positive fixture can also be exported as a durable machine-readable
+packet for the bounded occurrence-to-Return specimen:
+
+```bash
+python3 vesper_shadow_runner.py \
+  --fixture VSF-001-HAPPY-SHADOW-ROUTE \
+  --output /tmp/vesper-export.json
+```
+
+Its in-run `SettlementRecord` is deliberately provisional. It does not settle
+Observation, Evidence, durable MUS incorporation, recipient Return, external
+outcome, human authority, production behavior, federation, or Human Return.
+Those obligations cannot be borrowed from the fixture's terminal label.
+
 ## Claim boundary
 
 `DenyAllEnvironment` is a local fixture boundary. Its attestation shows only
 that this runner did not provide a transport path. It is not OS-level namespace
 proof, a production firewall claim, live GitHub behavior, or evidence of an
 external-world outcome.
+
+See
+[`../VESPER_OCCURRENCE_RETURN_CLOSURE_v0.1.md`](../VESPER_OCCURRENCE_RETURN_CLOSURE_v0.1.md)
+for the separate persisted episode and fresh-process verifier.

@@ -1,0 +1,233 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://one.example/schema/occurrence-return/closure-artifacts-v0.1.json",
+  "title": "Fixture-local occurrence-to-return closure artifacts",
+  "description": "Closed shapes for the five signed downstream artifacts. Runtime verification also checks signatures, role bindings, full signed-artifact hashes, MUS ledger identity, expected heads, and cross-artifact equality.",
+  "oneOf": [
+    { "$ref": "#/$defs/observation" },
+    { "$ref": "#/$defs/evidenceDecision" },
+    { "$ref": "#/$defs/settlementDecision" },
+    { "$ref": "#/$defs/returnEnvelope" },
+    { "$ref": "#/$defs/returnAcknowledgement" }
+  ],
+  "$defs": {
+    "hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "attestation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "key_id", "signer_role", "public_key", "body_hash", "signature"],
+      "properties": {
+        "algorithm": { "const": "Ed25519" },
+        "key_id": { "type": "string", "minLength": 1 },
+        "signer_role": { "type": "string", "minLength": 1 },
+        "public_key": { "type": "string", "pattern": "^(?:[0-9a-f]{2})+$" },
+        "body_hash": { "$ref": "#/$defs/hash" },
+        "signature": { "type": "string", "pattern": "^[0-9a-f]{128}$" }
+      }
+    },
+    "remainder": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["unexecuted_live_effect", "external_outcome", "non_exportable_authority", "unpromoted_return"],
+      "properties": {
+        "unexecuted_live_effect": { "const": true },
+        "external_outcome": { "const": "UNRESOLVED" },
+        "non_exportable_authority": { "const": true },
+        "unpromoted_return": { "const": true }
+      }
+    },
+    "base": {
+      "type": "object",
+      "required": ["schema_version", "type", "episode_id", "claim_ceiling", "attestation"],
+      "properties": {
+        "schema_version": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "minLength": 1 },
+        "episode_id": { "const": "episode:VSF-001-HAPPY-SHADOW-ROUTE" },
+        "claim_ceiling": { "type": "string", "minLength": 1 },
+        "attestation": { "$ref": "#/$defs/attestation" }
+      }
+    },
+    "observation": {
+      "allOf": [
+        { "$ref": "#/$defs/base" },
+        {
+          "type": "object",
+          "required": ["observation_id", "attempt_ref", "occurrence_ref", "occurrence_hash", "observer_ref", "observation_method", "observed_proposition", "completeness", "local_result", "external_effect", "observed_at", "evidence_admission_effect", "truth_effect", "settlement_effect", "standing_effect"],
+          "properties": {
+            "schema_version": { "const": "one.local-occurrence-observation.v0.1" },
+            "type": { "const": "Observation" },
+            "observation_id": { "const": "observation:VSF-001-HAPPY-SHADOW-ROUTE" },
+            "attempt_ref": { "const": "attempt:VSF-001-HAPPY-SHADOW-ROUTE" },
+            "occurrence_ref": { "const": "occurrence:VSF-001-HAPPY-SHADOW-ROUTE" },
+            "occurrence_hash": { "$ref": "#/$defs/hash" },
+            "observer_ref": { "type": "string", "pattern": "^observer-process:[0-9]+$" },
+            "observation_method": { "const": "PERSISTED_EXPORT_READBACK_AND_SIGNATURE_VERIFICATION" },
+            "observed_proposition": { "const": "The fixture boundary returned EGRESS_BLOCKED for the declared payload." },
+            "completeness": { "const": "COMPLETE_FOR_DECLARED_LOCAL_OCCURRENCE" },
+            "local_result": { "const": "EGRESS_BLOCKED" },
+            "external_effect": { "const": "NOT_OBSERVED_OR_CLAIMED" },
+            "observed_at": { "const": "2026-08-04T00:00:03Z" },
+            "evidence_admission_effect": { "const": "NONE" },
+            "truth_effect": { "const": "NONE" },
+            "settlement_effect": { "const": "NONE" },
+            "standing_effect": { "const": "NONE" },
+            "claim_ceiling": { "const": "SEPARATELY_ATTRIBUTABLE_LOCAL_OBSERVATION" }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "evidenceDecision": {
+      "allOf": [
+        { "$ref": "#/$defs/base" },
+        {
+          "type": "object",
+          "required": ["evidence_decision_id", "attempt_ref", "attempt_hash", "occurrence_ref", "occurrence_hash", "observation_ref", "observation_hash", "proposition", "verdict", "strength", "admission_status", "admission_basis", "external_effect_evidence", "external_outcome_evidence", "human_authority_evidence", "settlement_effect", "standing_effect", "assessed_at"],
+          "properties": {
+            "schema_version": { "const": "one.local-evidence-decision.v0.1" },
+            "type": { "const": "EvidenceDecision" },
+            "evidence_decision_id": { "const": "evidence:VSF-001-HAPPY-SHADOW-ROUTE" },
+            "attempt_ref": { "const": "attempt:VSF-001-HAPPY-SHADOW-ROUTE" },
+            "attempt_hash": { "$ref": "#/$defs/hash" },
+            "occurrence_ref": { "const": "occurrence:VSF-001-HAPPY-SHADOW-ROUTE" },
+            "occurrence_hash": { "$ref": "#/$defs/hash" },
+            "observation_ref": { "const": "observation:VSF-001-HAPPY-SHADOW-ROUTE" },
+            "observation_hash": { "$ref": "#/$defs/hash" },
+            "proposition": { "const": "The fixture boundary returned EGRESS_BLOCKED for the declared payload." },
+            "verdict": { "const": "SUPPORT" },
+            "strength": { "const": "STRONG_FOR_DECLARED_LOCAL_PROPOSITION" },
+            "admission_status": { "const": "ADMITTED" },
+            "admission_basis": {
+              "type": "array",
+              "prefixItems": [
+                { "const": "VESPER_RECORD_SIGNATURES_VALID" },
+                { "const": "PERSISTED_EXPORT_READBACK" },
+                { "const": "ATTEMPT_OCCURRENCE_OBSERVATION_LINKS_EXACT" }
+              ],
+              "items": false
+            },
+            "external_effect_evidence": { "const": "NOT_ESTABLISHED" },
+            "external_outcome_evidence": { "const": "NOT_ESTABLISHED" },
+            "human_authority_evidence": { "const": "NOT_ESTABLISHED" },
+            "settlement_effect": { "const": "NONE" },
+            "standing_effect": { "const": "NONE" },
+            "assessed_at": { "const": "2026-08-04T00:00:04Z" },
+            "claim_ceiling": { "const": "BOUNDED_LOCAL_OCCURRENCE_EVIDENCE" }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "settlementDecision": {
+      "allOf": [
+        { "$ref": "#/$defs/base" },
+        {
+          "type": "object",
+          "required": ["settlement_id", "previous_record_hash", "mus_receipt_ref", "mus_receipt_hash", "mus_signed_receipt_hash", "evidence_decision_ref", "evidence_decision_hash", "settled_proposition", "disposition", "settled_scope", "unresolved_scope", "remainder", "succession_effect", "future_authority_effect", "decided_at"],
+          "properties": {
+            "schema_version": { "const": "one.local-crossing-settlement.v0.1" },
+            "type": { "const": "SettlementDecision" },
+            "settlement_id": { "const": "settlement:VSF-001-HAPPY-SHADOW-ROUTE" },
+            "previous_record_hash": { "$ref": "#/$defs/hash" },
+            "mus_receipt_ref": { "type": "string", "format": "uuid" },
+            "mus_receipt_hash": { "$ref": "#/$defs/hash" },
+            "mus_signed_receipt_hash": { "$ref": "#/$defs/hash" },
+            "evidence_decision_ref": { "const": "evidence:VSF-001-HAPPY-SHADOW-ROUTE" },
+            "evidence_decision_hash": { "$ref": "#/$defs/hash" },
+            "settled_proposition": { "const": "The fixture boundary returned EGRESS_BLOCKED for the declared payload." },
+            "disposition": { "const": "SETTLED_LOCAL_ZERO_EGRESS_OBSERVATION" },
+            "settled_scope": {
+              "type": "array",
+              "prefixItems": [
+                { "const": "fixture-local-attempt-attributable" },
+                { "const": "fixture-local-deny-all-result-occurred" },
+                { "const": "persisted-result-separately-observed" },
+                { "const": "mus-record-admitted-and-ledgered" }
+              ],
+              "items": false
+            },
+            "unresolved_scope": {
+              "type": "array",
+              "prefixItems": [
+                { "const": "os-level-egress-enforcement" },
+                { "const": "external-github-occurrence" },
+                { "const": "external-outcome" },
+                { "const": "human-authority" },
+                { "const": "production-security" },
+                { "const": "succession" },
+                { "const": "federation" }
+              ],
+              "items": false
+            },
+            "remainder": { "$ref": "#/$defs/remainder" },
+            "succession_effect": { "const": "NONE" },
+            "future_authority_effect": { "const": "NONE" },
+            "decided_at": { "const": "2026-08-04T00:00:05Z" },
+            "claim_ceiling": { "const": "FIXTURE_LOCAL_SETTLEMENT_ONLY" }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "returnEnvelope": {
+      "allOf": [
+        { "$ref": "#/$defs/base" },
+        {
+          "type": "object",
+          "required": ["return_id", "previous_record_hash", "recipient_ref", "carriage", "mus_receipt_ref", "mus_receipt_hash", "mus_signed_receipt_hash", "evidence_decision_ref", "evidence_decision_hash", "settlement_ref", "settlement_hash", "remainder", "requested_disposition", "automatic_incorporation", "succession_effect", "learning_effect", "future_authority_effect", "sent_at"],
+          "properties": {
+            "schema_version": { "const": "one.local-return-envelope.v0.1" },
+            "type": { "const": "ReturnEnvelope" },
+            "return_id": { "const": "return:VSF-001-HAPPY-SHADOW-ROUTE" },
+            "previous_record_hash": { "$ref": "#/$defs/hash" },
+            "recipient_ref": { "const": "fixture-sourcepoint:VSF-001-HAPPY-SHADOW-ROUTE" },
+            "carriage": { "const": "LOCAL_FIXTURE_INBOX" },
+            "mus_receipt_ref": { "type": "string", "format": "uuid" },
+            "mus_receipt_hash": { "$ref": "#/$defs/hash" },
+            "mus_signed_receipt_hash": { "$ref": "#/$defs/hash" },
+            "evidence_decision_ref": { "const": "evidence:VSF-001-HAPPY-SHADOW-ROUTE" },
+            "evidence_decision_hash": { "$ref": "#/$defs/hash" },
+            "settlement_ref": { "const": "settlement:VSF-001-HAPPY-SHADOW-ROUTE" },
+            "settlement_hash": { "$ref": "#/$defs/hash" },
+            "remainder": { "$ref": "#/$defs/remainder" },
+            "requested_disposition": { "const": "RECEIVE_FOR_SOURCEPOINT_REVIEW" },
+            "automatic_incorporation": { "const": false },
+            "succession_effect": { "const": "NONE" },
+            "learning_effect": { "const": "NONE" },
+            "future_authority_effect": { "const": "NONE" },
+            "sent_at": { "const": "2026-08-04T00:00:06Z" },
+            "claim_ceiling": { "const": "RECIPIENT_SPECIFIC_LOCAL_RETURN_CARRIAGE" }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "returnAcknowledgement": {
+      "allOf": [
+        { "$ref": "#/$defs/base" },
+        {
+          "type": "object",
+          "required": ["acknowledgement_id", "previous_record_hash", "return_ref", "return_hash", "recipient_ref", "disposition", "incorporated", "orientation_promoted", "succession_effect", "learning_effect", "future_authority_effect", "acknowledged_at"],
+          "properties": {
+            "schema_version": { "const": "one.local-return-acknowledgement.v0.1" },
+            "type": { "const": "ReturnAcknowledgement" },
+            "acknowledgement_id": { "const": "return-ack:VSF-001-HAPPY-SHADOW-ROUTE" },
+            "previous_record_hash": { "$ref": "#/$defs/hash" },
+            "return_ref": { "const": "return:VSF-001-HAPPY-SHADOW-ROUTE" },
+            "return_hash": { "$ref": "#/$defs/hash" },
+            "recipient_ref": { "const": "fixture-sourcepoint:VSF-001-HAPPY-SHADOW-ROUTE" },
+            "disposition": { "const": "RECEIVED_FOR_DISPOSITION" },
+            "incorporated": { "const": false },
+            "orientation_promoted": { "const": false },
+            "succession_effect": { "const": "NONE" },
+            "learning_effect": { "const": "NONE" },
+            "future_authority_effect": { "const": "NONE" },
+            "acknowledged_at": { "const": "2026-08-04T00:00:07Z" },
+            "claim_ceiling": { "const": "FIXTURE_SOURCEPOINT_RECEIPT_ACKNOWLEDGEMENT_ONLY" }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    }
+  }
+}

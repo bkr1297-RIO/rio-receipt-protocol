@@ -19,6 +19,12 @@
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
+const {
+  buildSignedReceiptBody,
+  canonicalize,
+  sha256,
+  validateExecution,
+} = require("./receipt-core");
 
 // --- Paths ---
 
@@ -84,23 +90,6 @@ function checkAndRecordNonce(nonce) {
   return true;
 }
 
-// --- Crypto helpers ---
-
-function sha256(data) {
-  return crypto.createHash("sha256").update(data, "utf8").digest("hex");
-}
-
-function canonicalize(obj) {
-  if (obj === null || typeof obj !== "object") return JSON.stringify(obj);
-  if (Array.isArray(obj)) return "[" + obj.map(canonicalize).join(",") + "]";
-  const sortedKeys = Object.keys(obj).sort();
-  return (
-    "{" +
-    sortedKeys.map((k) => JSON.stringify(k) + ":" + canonicalize(obj[k])).join(",") +
-    "}"
-  );
-}
-
 function sign(payload, privKey) {
   return crypto.sign(null, Buffer.from(payload, "utf8"), privKey).toString("hex");
 }
@@ -116,21 +105,8 @@ function now() {
 // --- Validation ---
 
 function validate(intent, executionInput, approval) {
-  const intentHash = sha256(canonicalize(intent));
-  const intent_match = sha256(canonicalize(executionInput)) === intentHash || executionInput.action === intent.action;
-  const context_match = approval.intent_hash === intentHash;
-  const scope_valid = executionInput.action === approval.scope;
   const ALLOWED_ACTIONS = ["send_email", "create_document", "schedule_meeting", "search_web", "read_file"];
-  const execution_path_valid = ALLOWED_ACTIONS.includes(executionInput.action);
-
-  const checks = { intent_match, context_match, scope_valid, execution_path_valid };
-  const allPass = Object.values(checks).every(Boolean);
-
-  return {
-    decision: allPass ? "ALLOW" : "BLOCK",
-    checks,
-    policy_version: "1.0.0",
-  };
+  return validateExecution(intent, executionInput, approval, ALLOWED_ACTIONS);
 }
 
 // --- Receipt construction ---
@@ -139,7 +115,7 @@ function constructReceipt(intent, executionInput, approval, validation, previous
   const intentHash = sha256(canonicalize(intent));
   const executionHash = sha256(canonicalize(executionInput));
 
-  const receiptBody = {
+  const receiptBody = buildSignedReceiptBody({
     receipt_id: makeId(),
     timestamp: now(),
     intent_hash: intentHash,
@@ -160,7 +136,7 @@ function constructReceipt(intent, executionInput, approval, validation, previous
     chain_reference: {
       previous_receipt_hash: previousReceiptHash,
     },
-  };
+  });
 
   const payload = canonicalize(receiptBody);
   const receiptHash = sha256(payload);
@@ -276,17 +252,7 @@ console.log("");
 
 // Use the existing verify_receipt.js logic inline for the demo
 function verifyReceiptInline(receipt) {
-  const body = {
-    receipt_id: receipt.receipt_id,
-    timestamp: receipt.timestamp,
-    intent_hash: receipt.intent_hash,
-    execution_hash: receipt.execution_hash,
-    validation: receipt.validation,
-    decision: receipt.decision,
-    approval: receipt.approval,
-    chain_reference: receipt.chain_reference,
-  };
-  if (receipt.mus_unit_id) body.mus_unit_id = receipt.mus_unit_id;
+  const body = buildSignedReceiptBody(receipt);
 
   const payload = canonicalize(body);
   const computedHash = sha256(payload);
