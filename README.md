@@ -58,6 +58,23 @@ authority, an external occurrence or outcome, production security,
 succession, federation, or Human Return. See
 [`docs/conformance/VESPER_OCCURRENCE_RETURN_CLOSURE_v0.1.md`](docs/conformance/VESPER_OCCURRENCE_RETURN_CLOSURE_v0.1.md).
 
+## Bounded Federated Crossing Fixture
+
+After the single-domain closure fixture, a separate two-jurisdiction specimen
+types a purpose-bound `SharedWorld`, inert `Door` objects, a local synthetic
+`Crossing`, trace, evidence, receipt, settlement, and distinct Returns to both
+campuses.
+
+```bash
+npm run test:federation
+node federation-fixture/produce.js /tmp/federated-crossing-packet
+```
+
+It establishes only a reconstructable local synthetic fixture; it does not
+establish production federation, constitutional lawfulness, shared succession,
+external effect, or human authority. See
+[`docs/conformance/FEDERATED_CROSSING_FIXTURE_v0.1.md`](docs/conformance/FEDERATED_CROSSING_FIXTURE_v0.1.md).
+
 ---
 
 ## SPG-M Profile
