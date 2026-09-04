@@ -31,8 +31,32 @@ A self-contained, zero-dependency receipt engine that demonstrates:
 - Detecting tampering, deletion, reordering, and replay attacks
 
 **Classification:** C — Local Receipt Engine Prototype
-**Dependencies:** Zero (Node.js 18+ built-in crypto only)
+**Core dependencies:** Zero Node packages (Node.js 18+ built-in crypto only)
+**Vesper closure fixture:** Python 3.11+ and `cryptography`
 **Network calls:** Zero
+
+---
+
+## Bounded Vesper Occurrence-to-Return Specimen
+
+The repository also composes the existing Vesper synthetic route with the
+same receipt core used by the local engine. It persists distinct Attempt,
+Occurrence, Observation, Evidence, Receipt, Settlement, Return, and
+Acknowledgement artifacts, then asks a fresh process to reconstruct the
+episode against producer-emitted MUS-ledger and Return-journal heads handed to
+a newly started verifier. This models retained checkpoints; it is not an
+externally governed checkpoint service.
+
+```bash
+npm run test:occurrence-return
+npm run closure:vesper
+```
+
+A passing run establishes only a closed local synthetic zero-egress fixture
+lineage ending `RETURNED_UNPROMOTED`. It does not establish live human
+authority, an external occurrence or outcome, production security,
+succession, federation, or Human Return. See
+[`docs/conformance/VESPER_OCCURRENCE_RETURN_CLOSURE_v0.1.md`](docs/conformance/VESPER_OCCURRENCE_RETURN_CLOSURE_v0.1.md).
 
 ---
 
@@ -98,6 +122,11 @@ npm run verify-chain
 | `npm run verify-chain` | Full ledger chain verification → CHAIN VALID |
 
 That's it. No install beyond Node.js 18+. No npm dependencies. No network calls.
+
+The optional occurrence-to-Return specimen has an additional local Python
+requirement documented in its section above. Run `npm run test:full` after
+installing Python `cryptography` to exercise both the Node-only core and that
+fixture.
 
 ---
 
