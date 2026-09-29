@@ -350,3 +350,7 @@ If it changes, it doesn't run. If it runs, you can prove it.
 ## License
 
 MIT
+
+## ONE Local Field v0.1 (draft build)
+
+The [Local Field receipt lineage profile](spec/LOCAL_FIELD_RECEIPT_PROFILE_v0.1.md) reconciles the existing gateway five-hash format, multi-node provenance and signed Return. `npm run test:local-field` checks an actual exported runtime proof plus tampering cases. This is a read-only verifier adaptation; it does not replace the standalone receipt generator or manufacture authorization.
