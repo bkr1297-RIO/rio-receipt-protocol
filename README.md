@@ -398,3 +398,9 @@ If the supplied execution input changes, local validation blocks it. If a receip
 ## License
 
 MIT
+
+## ONE Local Field v0.1 (draft build)
+
+The [Local Field receipt lineage profile](spec/LOCAL_FIELD_RECEIPT_PROFILE_v0.1.md) reconciles the existing gateway five-hash format, multi-node provenance and signed Return. `npm run test:local-field` checks an actual exported runtime proof plus tampering cases. This is a read-only verifier adaptation; it does not replace the standalone receipt generator or manufacture authorization.
+
+Receipt-core target-drift verification from [PR #28](https://github.com/bkr1297-RIO/rio-receipt-protocol/pull/28) is retained as the predecessor of this bounded Local Field profile. The native five-hash verifier does not authenticate human authority, establish off-host observation, or replace the signed standalone receipt format.

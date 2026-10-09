@@ -21,7 +21,8 @@
     "sourceboard:receipt": "node demo_sourceboard_to_real_receipt.js",
     "sourceboard:receipt:append": "node demo_sourceboard_to_real_receipt.js --append",
     "sourceboard:blocked": "node test/blocked-crossing-receipt-demo.test.js",
-    "coherence-assessment:test": "node test/coherence-assessment.test.js"
+    "coherence-assessment:test": "node test/coherence-assessment.test.js",
+    "test:local-field": "node --test test/local-field-profile.test.js"
   },
   "keywords": [
     "receipt",
