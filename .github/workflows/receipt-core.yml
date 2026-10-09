@@ -30,6 +30,8 @@ jobs:
         run: npm run init -- --owner "human:ci"
       - name: Run declared full suite
         run: npm run test:full
+      - name: Verify bounded Local Field receipt profile
+        run: npm run test:local-field
       - name: Generate and verify a receipt
         run: |
           node generate_receipt.js
